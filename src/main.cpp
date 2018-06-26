@@ -1,5 +1,6 @@
 #include<simplecpp>
 #include<vector>
+#include "utils.cpp"
 
 //******high processing demands
 //******can do better by less checking every time
@@ -25,24 +26,6 @@ double vectorangle(double x1, double y1, double x2, double y2) {
     return 0;
 }
 
-/**
- * Returns the angle made by ray with X-axis in degrees
- * the order of the args matter
- * output range from 0 to 359
- * */
-double rayAngle(double x1, double y1, double x2, double y2) {
-    if (x2 - x1 == 0) {
-        if (y2 - y1 > 0) { return 90; }
-        else if (y2 - y1 < 0) { return -90; }
-        else { return 0; }
-    } else {
-        double cosineOfAngle = (x2 - x1) / sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-        double angle = arccosine(cosineOfAngle);
-        if (y2 - y1 >= 0) { return angle; }
-        else { return -angle; }
-    }
-}
-
 //(the order of input matters) OUTPUT -pi to pi
 double lineangle(double x1, double y1, double x2, double y2) {
     if ((x2 - x1) == 0)return 90;
@@ -57,27 +40,27 @@ double lineangle(double x1, double y1, double x2, double y2) {
 //OUTPUT -pi/2 to pi/2
 
 class LightPlay {
-
-    int n;//no of vertices including the initial point
+    int n; //no of vertices including the initial point
     double **c; //coordinate of leading point
-    vector<Line> ray;
+    vector<Line> lightRays;
 
     double dx, dy;//translators
 
-    int noLines;//no of mirrors
-    Line *I;//mirror lines
-    double M[200][2][2];//mirrors end points data******100 at max
+    int noLines;
+    Line *lineMirrors;
+    double M[200][2][2]; //mirrors end points data******100 at max
 
     int noCircles;
-    Circle *O;
+    Circle *circleMirrors;
+
     double S[100][2];
     int noSquares;
+
     Circle target;
     double tarc[2];
 
     int pass;
     double scale;
-    double x, y;
 
     void assigntoheap() {
 
@@ -117,13 +100,13 @@ class LightPlay {
     void ontarget() {
         Line lin(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
         lin.setColor(COLOR(255, 255, 255));
-        ray.push_back(lin);
+        lightRays.push_back(lin);
         target.setColor(COLOR(153, 0, 0));
         wait(2);
     }
 
     void renderCircles() {
-        O = new Circle[noCircles];
+        circleMirrors = new Circle[noCircles];
         int p;
         double x1, y1;
         for (int i = 0; i < noCircles; i++) {
@@ -132,9 +115,9 @@ class LightPlay {
             S[i][1] = y1 = p % 65536;
             {
                 Circle source(x1, y1, 75);
-                O[i] = source;
-                O[i].setColor(COLOR(160, 160, 160));
-                O[i].setFill(1);
+                circleMirrors[i] = source;
+                circleMirrors[i].setColor(COLOR(160, 160, 160));
+                circleMirrors[i].setFill(1);
             }
         }
     }
@@ -188,7 +171,7 @@ class LightPlay {
     }
 
     void renderLines() {
-        I = new Line[noLines];
+        lineMirrors = new Line[noLines];
         int p;
         double x1, y1, x2, y2;
         for (int i = 0; i < noLines; i++) {
@@ -200,16 +183,12 @@ class LightPlay {
             M[i][1][0] = x2 = p / 65536;
             M[i][1][1] = y2 = p % 65536;
 
-
             {
                 Line source(x1, y1, x2, y2);
-                I[i] = source;
-                I[i].setColor(COLOR(160, 160, 160));
+                lineMirrors[i] = source;
+                lineMirrors[i].setColor(COLOR(160, 160, 160));
             }
-
         }
-
-
     }
 
     bool on_mirror() {
@@ -275,7 +254,7 @@ class LightPlay {
         resetthesysduringcollision();
         Line lin(c[n - 3][0], c[n - 3][1], c[n - 2][0], c[n - 2][1]);
         lin.setColor(COLOR(255, 255, 255));
-        ray.push_back(lin);
+        lightRays.push_back(lin);
         c[n - 1][0] = c[n - 1][0] + 2 * dx;
         c[n - 1][1] = c[n - 1][1] + 2 * dy;
         return;
@@ -284,7 +263,7 @@ class LightPlay {
     void Scollision(int m) {
         Line lin(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
         lin.setColor(COLOR(255, 255, 255));
-        ray.push_back(lin);
+        lightRays.push_back(lin);
         double o1, o, a, b;
         a = vectorangle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
         o1 = lineangle(c[n - 1][0], c[n - 1][1], S[m][0], S[m][1]);
@@ -303,10 +282,14 @@ class LightPlay {
 
 public:
 
-    LightPlay(int noLines, int noCircles, int noSquares) : noLines(noLines), noCircles(noCircles), noSquares(noSquares) {
+    LightPlay(int noLines, int noCircles, int noSquares) :
+            noLines(noLines),
+            noCircles(noCircles),
+            noSquares(noSquares) {
         renderLines();
         renderCircles();
         renderSquares();
+        Vector2d click;
 
         n = 2;
         assigntoheap();
@@ -337,18 +320,16 @@ public:
         int checker = 0;
         scale = 1;
         while (true) {
-            p = getClick();
-            x = p / 65536;
-            y = p % 65536;
-            if (sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1)) <= 75) { break; }
+            registerClick(&click);
+            if (Vector2d(click.x - x1, click.y - y1).length() <= 75) { break; }
         }
 
         bool exit;
         while (true) {
-            exit = 0;
+            exit = false;
 
             double o;
-            o = vectorangle(x1, y1, x, y);
+            o = vectorangle(x1, y1, click.x, click.y);
             dx = cosine(o);
             dy = sine(o);
 
@@ -367,7 +348,7 @@ public:
                     if (sqrt((c[n - 1][0] - tarc[0]) * (c[n - 1][0] - tarc[0]) +
                              (c[n - 1][1] - tarc[1]) * (c[n - 1][1] - tarc[1])) <= 50) {
                         ontarget();
-                        exit = 1;
+                        exit = true;
                         cout << "PASSED" << endl;
                         break;
                     }
@@ -382,7 +363,7 @@ public:
                 if (c[n - 1][0] >= 1450 || c[n - 1][0] <= 50 || c[n - 1][1] >= 650 || c[n - 1][1] <= 50) {
                     Line lin(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
                     lin.setColor(COLOR(255, 255, 255));
-                    ray.push_back(lin);
+                    lightRays.push_back(lin);
                     break;
                 }
 
@@ -396,16 +377,14 @@ public:
             //end the reflections and create lines
             if (exit) { break; }
             while (true) {
-                p = getClick();
-                x = p / 65536;
-                y = p % 65536;
-                if (sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1)) <= 75) { break; }
+                registerClick(&click);
+                if (Vector2d(click.x - x1, click.y - y1).length() <= 75) { break; }
             }
 
             {//resetting the system
                 //Line zero(0,0,0,0);
-                //for(size_t i=0;i<ray.size();i++){ray[i]=zero;}
-                ray.resize(0);
+                //for(size_t i=0;i<lightRays.size();i++){lightRays[i]=zero;}
+                lightRays.resize(0);
                 removefromheap();
                 n = 2;
                 assigntoheap();

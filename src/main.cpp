@@ -5,10 +5,12 @@
 //******can do better by less checking every time
 //******and more intelligent checking near the mirror
 //******reflection should be more at the mirror
-//******limit on cubes
+//******limit on noSquares
 //******sometimes dosent start
 // full game with little optimization + spherical mirrors + cubical mirrors
 //******doesn't handle reflection on both at same time ie corners
+
+
 double vectorangle(double x1, double y1, double x2, double y2) {
     double cosineofangle, angle;
     if ((x2 - x1) != 0) {
@@ -21,6 +23,24 @@ double vectorangle(double x1, double y1, double x2, double y2) {
         if (y2 - y1 < 0) return -90;
     }
     return 0;
+}
+
+/**
+ * Returns the angle made by ray with X-axis in degrees
+ * the order of the args matter
+ * output range from 0 to 359
+ * */
+double rayAngle(double x1, double y1, double x2, double y2) {
+    if (x2 - x1 == 0) {
+        if (y2 - y1 > 0) { return 90; }
+        else if (y2 - y1 < 0) { return -90; }
+        else { return 0; }
+    } else {
+        double cosineOfAngle = (x2 - x1) / sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+        double angle = arccosine(cosineOfAngle);
+        if (y2 - y1 >= 0) { return angle; }
+        else { return -angle; }
+    }
 }
 
 //(the order of input matters) OUTPUT -pi to pi
@@ -36,7 +56,7 @@ double lineangle(double x1, double y1, double x2, double y2) {
 }
 //OUTPUT -pi/2 to pi/2
 
-struct lightplay {
+class LightPlay {
 
     int n;//no of vertices including the initial point
     double **c; //coordinate of leading point
@@ -44,22 +64,20 @@ struct lightplay {
 
     double dx, dy;//translators
 
-    int m;//no of mirrors
+    int noLines;//no of mirrors
     Line *I;//mirror lines
     double M[200][2][2];//mirrors end points data******100 at max
-    int s;
+
+    int noCircles;
     Circle *O;
     double S[100][2];
-    int cubes;
+    int noSquares;
     Circle target;
     double tarc[2];
 
     int pass;
     double scale;
     double x, y;
-    //-------------------------------------------------------------
-
-
 
     void assigntoheap() {
 
@@ -104,13 +122,11 @@ struct lightplay {
         wait(2);
     }
 
-
-    void arrthecircles() {
-        cin >> s;
-        O = new Circle[s];
+    void renderCircles() {
+        O = new Circle[noCircles];
         int p;
         double x1, y1;
-        for (int i = 0; i < s; i++) {
+        for (int i = 0; i < noCircles; i++) {
             p = getClick();
             S[i][0] = x1 = p / 65536;
             S[i][1] = y1 = p % 65536;
@@ -123,12 +139,11 @@ struct lightplay {
         }
     }
 
-    void arrthecubes() {
-        cin >> cubes;
+    void renderSquares() {
         int p;
         int corr = 0;
         double x1, y1;
-        for (int i = 0; i < cubes; i++) {
+        for (int i = 0; i < noSquares; i++) {
 
             p = getClick();
             x1 = p / 65536;
@@ -139,25 +154,25 @@ struct lightplay {
                 source.setColor(COLOR(160, 160, 160));
                 source.imprint();
             }
-            M[m + i + corr][0][0] = x1 + 25;
-            M[m + i + corr][0][1] = y1 + 25;
-            M[m + i + corr][1][0] = x1 - 25;
-            M[m + i + corr][1][1] = y1 + 25;
+            M[noLines + i + corr][0][0] = x1 + 25;
+            M[noLines + i + corr][0][1] = y1 + 25;
+            M[noLines + i + corr][1][0] = x1 - 25;
+            M[noLines + i + corr][1][1] = y1 + 25;
 
-            M[m + i + 1 + corr][0][0] = x1 - 25;
-            M[m + i + 1 + corr][0][1] = y1 + 25;
-            M[m + i + 1 + corr][1][0] = x1 - 25;
-            M[m + i + 1 + corr][1][1] = y1 - 25;
+            M[noLines + i + 1 + corr][0][0] = x1 - 25;
+            M[noLines + i + 1 + corr][0][1] = y1 + 25;
+            M[noLines + i + 1 + corr][1][0] = x1 - 25;
+            M[noLines + i + 1 + corr][1][1] = y1 - 25;
 
-            M[m + i + 2 + corr][0][0] = x1 - 25;
-            M[m + i + 2 + corr][0][1] = y1 - 25;
-            M[m + i + 2 + corr][1][0] = x1 + 25;
-            M[m + i + 2 + corr][1][1] = y1 - 25;
+            M[noLines + i + 2 + corr][0][0] = x1 - 25;
+            M[noLines + i + 2 + corr][0][1] = y1 - 25;
+            M[noLines + i + 2 + corr][1][0] = x1 + 25;
+            M[noLines + i + 2 + corr][1][1] = y1 - 25;
 
-            M[m + i + 3 + corr][0][0] = x1 + 25;
-            M[m + i + 3 + corr][0][1] = y1 - 25;
-            M[m + i + 3 + corr][1][0] = x1 + 25;
-            M[m + i + 3 + corr][1][1] = y1 + 25;
+            M[noLines + i + 3 + corr][0][0] = x1 + 25;
+            M[noLines + i + 3 + corr][0][1] = y1 - 25;
+            M[noLines + i + 3 + corr][1][0] = x1 + 25;
+            M[noLines + i + 3 + corr][1][1] = y1 + 25;
             corr = corr + 3;
         }
 
@@ -172,12 +187,11 @@ struct lightplay {
         }
     }
 
-    void arrthemirrors() {
-        cin >> m;
-        I = new Line[m];
+    void renderLines() {
+        I = new Line[noLines];
         int p;
         double x1, y1, x2, y2;
-        for (int i = 0; i < m; i++) {
+        for (int i = 0; i < noLines; i++) {
             p = getClick();
             M[i][0][0] = x1 = p / 65536;
             M[i][0][1] = y1 = p % 65536;
@@ -198,9 +212,8 @@ struct lightplay {
 
     }
 
-
     bool on_mirror() {
-        for (int i = 0; i < m + cubes * 16; i++) {
+        for (int i = 0; i < noLines + noSquares * 16; i++) {
             double a, b, x1, y1, x2, y2;
             a = c[n - 1][0];
             b = c[n - 1][1];
@@ -229,12 +242,11 @@ struct lightplay {
         return false;
     }
 
-
     bool on_sphere() {
         double a, b, x1, y1;
         a = c[n - 1][0];
         b = c[n - 1][1];
-        for (int i = 0; i < s; i++) {
+        for (int i = 0; i < noCircles; i++) {
             x1 = S[i][0];
             y1 = S[i][1];
 
@@ -289,15 +301,15 @@ struct lightplay {
 
     }
 
+public:
 
-    lightplay() {
-        cout << "Spheres-space-Mirrors-space-Cubes-enter   ex: 1 1 1 then press enter" << endl;
-        arrthecircles();
-        arrthemirrors();
-        arrthecubes();
+    LightPlay(int noLines, int noCircles, int noSquares) : noLines(noLines), noCircles(noCircles), noSquares(noSquares) {
+        renderLines();
+        renderCircles();
+        renderSquares();
+
         n = 2;
         assigntoheap();
-
 
         int p;
 
@@ -307,26 +319,20 @@ struct lightplay {
         y1 = p % 65536;
         c[1][0] = c[0][0] = x1;
         c[1][1] = c[0][1] = y1;
-        {
-            Circle refer(c[0][0], c[1][1], 75);
-            refer.setColor(COLOR(242, 17, 17));
-            refer.imprint();
-        }
-        {
-            Circle refer(c[0][0], c[1][1], 50);
-            refer.setColor(COLOR(242, 187, 17));
-            refer.imprint();
-        }
-        {
-            Circle refer(c[0][0], c[1][1], 25);
-            refer.setColor(COLOR(242, 137, 17));
-            refer.imprint();
-        }
-        {
-            Circle refer(c[0][0], c[1][1], 2);
-            refer.setColor(COLOR(24, 137, 17));
-            refer.imprint();
-        }
+
+        // Light source
+        Circle refer(c[0][0], c[1][1], 75);
+        refer.setColor(COLOR(242, 17, 17)).imprint();
+
+        refer.reset(c[0][0], c[1][1], 50);
+        refer.setColor(COLOR(242, 187, 17)).imprint();
+
+        refer.reset(c[0][0], c[1][1], 25);
+        refer.setColor(COLOR(242, 137, 17)).imprint();
+
+        refer.reset(c[0][0], c[1][1], 2);
+        refer.setColor(COLOR(24, 137, 17)).imprint();
+
 
         int checker = 0;
         scale = 1;
@@ -336,7 +342,6 @@ struct lightplay {
             y = p % 65536;
             if (sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1)) <= 75) { break; }
         }
-
 
         bool exit;
         while (true) {
@@ -413,28 +418,30 @@ struct lightplay {
         //cout<<checker;
     }
 
-
-    ~lightplay() { removefromheap(); }
+    ~LightPlay() { removefromheap(); }
 
 };
 
 
-main_program {
+int main() {
+
+    int noLines, noCircles, noSquares;
+    cout << "Spheres-space-Mirrors-space-Cubes-enter   ex: 1 1 1 then press enter" << endl;
+    cin >> noLines >> noCircles >> noSquares;
 
     initCanvas("light", 1500, 700);
-    {
-        Rectangle border2(750, 350, 1500, 700);
-        border2.setColor(COLOR(65, 65, 65));
-        border2.setFill(1);
-        border2.imprint();
-        Rectangle border(750, 350, 1400, 600);
-        border.setColor(COLOR(0, 0, 0));
-        border.setFill(1);
-        border.imprint();
-    }
+
+    Rectangle border(750, 350, 1500, 700);
+    border.setColor(COLOR(65, 65, 65)).setFill();
+    border.imprint();
+    border.reset(750, 350, 1400, 600);
+    border.setColor(COLOR(0, 0, 0)).setFill();
+    border.imprint();
+
 
 
 //define a light class rotate ,reflect until last non reflecting surface.
 
-    lightplay p;
+    LightPlay p = LightPlay(noLines, noCircles, noSquares);
+
 }

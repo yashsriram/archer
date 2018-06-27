@@ -48,7 +48,7 @@ class LightPlay {
 
     int noLineMirrors;
     Line *lineMirrors;
-    double M[200][2][2]; //mirrors end points data******100 at max
+    double lineMirrorEndpoints[200][2][2]; //mirrors end points data******100 at max
 
     int noCircleMirrors;
     Circle *circleMirrors;
@@ -56,8 +56,8 @@ class LightPlay {
     double S[100][2];
     int noSquareMirrors;
 
-    Circle target;
     double tarc[2];
+    Circle target;
 
     int pass;
     double scale;
@@ -105,90 +105,88 @@ class LightPlay {
         wait(2);
     }
 
-    void renderCircles() {
-        circleMirrors = new Circle[noCircleMirrors];
-        int p;
-        double x1, y1;
-        for (int i = 0; i < noCircleMirrors; i++) {
-            p = getClick();
-            S[i][0] = x1 = p / 65536;
-            S[i][1] = y1 = p % 65536;
-            {
-                Circle source(x1, y1, 75);
-                circleMirrors[i] = source;
-                circleMirrors[i].setColor(COLOR(160, 160, 160));
-                circleMirrors[i].setFill(1);
-            }
+    void placeLineMirrors() {
+        lineMirrors = new Line[noLineMirrors];
+        double x1, y1, x2, y2;
+        Vector2d click;
+        for (int i = 0; i < noLineMirrors; i++) {
+            registerClick(&click);
+            lineMirrorEndpoints[i][0][0] = x1 = click.x;
+            lineMirrorEndpoints[i][0][1] = y1 = click.y;
+
+            registerClick(&click);
+            lineMirrorEndpoints[i][1][0] = x2 = click.x;
+            lineMirrorEndpoints[i][1][1] = y2 = click.y;
+
+            lineMirrors[i] = Line(x1, y1, x2, y2);
+            lineMirrors[i].setColor(COLOR(160, 160, 160));
         }
     }
 
-    void renderSquares() {
-        int p;
-        int corr = 0;
+    void placeCircleMirrors() {
+        circleMirrors = new Circle[noCircleMirrors];
         double x1, y1;
+        Vector2d click;
+        for (int i = 0; i < noCircleMirrors; i++) {
+            registerClick(&click);
+            S[i][0] = x1 = click.x;
+            S[i][1] = y1 = click.y;
+
+            circleMirrors[i] = Circle(x1, y1, 75);
+            circleMirrors[i].setColor(COLOR(160, 160, 160)).setFill();
+        }
+    }
+
+    /**
+     * Square mirror is nothing but set of 4 Line mirrors
+     * */
+    void placeSquareMirrors() {
+        int corr = 0;
+        const double SIDE_LENGTH_OF_SQUARE = 25;
+        double x1, y1;
+        Vector2d click;
         for (int i = 0; i < noSquareMirrors; i++) {
 
-            p = getClick();
-            x1 = p / 65536;
-            y1 = p % 65536;
+            registerClick(&click);
+            x1 = click.x;
+            y1 = click.y;
 
             {
                 Rectangle source(x1, y1, 50, 50);
                 source.setColor(COLOR(160, 160, 160));
                 source.imprint();
             }
-            M[noLineMirrors + i + corr][0][0] = x1 + 25;
-            M[noLineMirrors + i + corr][0][1] = y1 + 25;
-            M[noLineMirrors + i + corr][1][0] = x1 - 25;
-            M[noLineMirrors + i + corr][1][1] = y1 + 25;
+            lineMirrorEndpoints[noLineMirrors + i + corr][0][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + corr][0][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + corr][1][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + corr][1][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
 
-            M[noLineMirrors + i + 1 + corr][0][0] = x1 - 25;
-            M[noLineMirrors + i + 1 + corr][0][1] = y1 + 25;
-            M[noLineMirrors + i + 1 + corr][1][0] = x1 - 25;
-            M[noLineMirrors + i + 1 + corr][1][1] = y1 - 25;
+            lineMirrorEndpoints[noLineMirrors + i + 1 + corr][0][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 1 + corr][0][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 1 + corr][1][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 1 + corr][1][1] = y1 - SIDE_LENGTH_OF_SQUARE / 2;
 
-            M[noLineMirrors + i + 2 + corr][0][0] = x1 - 25;
-            M[noLineMirrors + i + 2 + corr][0][1] = y1 - 25;
-            M[noLineMirrors + i + 2 + corr][1][0] = x1 + 25;
-            M[noLineMirrors + i + 2 + corr][1][1] = y1 - 25;
+            lineMirrorEndpoints[noLineMirrors + i + 2 + corr][0][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 2 + corr][0][1] = y1 - SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 2 + corr][1][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 2 + corr][1][1] = y1 - SIDE_LENGTH_OF_SQUARE / 2;
 
-            M[noLineMirrors + i + 3 + corr][0][0] = x1 + 25;
-            M[noLineMirrors + i + 3 + corr][0][1] = y1 - 25;
-            M[noLineMirrors + i + 3 + corr][1][0] = x1 + 25;
-            M[noLineMirrors + i + 3 + corr][1][1] = y1 + 25;
+            lineMirrorEndpoints[noLineMirrors + i + 3 + corr][0][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 3 + corr][0][1] = y1 - SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 3 + corr][1][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
+            lineMirrorEndpoints[noLineMirrors + i + 3 + corr][1][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
             corr = corr + 3;
         }
 
-        p = getClick();
-        tarc[0] = x1 = p / 65536;
-        tarc[1] = y1 = p % 65536;
-        {
-            Circle c(x1, y1, 50);
-            target = c;
-            target.setColor(COLOR(0, 204, 0));
-            target.setFill(1);
-        }
     }
 
-    void renderLines() {
-        lineMirrors = new Line[noLineMirrors];
-        int p;
-        double x1, y1, x2, y2;
-        for (int i = 0; i < noLineMirrors; i++) {
-            p = getClick();
-            M[i][0][0] = x1 = p / 65536;
-            M[i][0][1] = y1 = p % 65536;
-
-            p = getClick();
-            M[i][1][0] = x2 = p / 65536;
-            M[i][1][1] = y2 = p % 65536;
-
-            {
-                Line source(x1, y1, x2, y2);
-                lineMirrors[i] = source;
-                lineMirrors[i].setColor(COLOR(160, 160, 160));
-            }
-        }
+    void placeTarget() {
+        Vector2d click;
+        registerClick(&click);
+        tarc[0] = click.x;
+        tarc[1] = click.y;
+        target = Circle(tarc[0], tarc[1], 50);
+        target.setColor(COLOR(0, 204, 0)).setFill();
     }
 
     bool on_mirror() {
@@ -196,10 +194,10 @@ class LightPlay {
             double a, b, x1, y1, x2, y2;
             a = c[n - 1][0];
             b = c[n - 1][1];
-            x1 = M[i][0][0];
-            y1 = M[i][0][1];
-            x2 = M[i][1][0];
-            y2 = M[i][1][1];
+            x1 = lineMirrorEndpoints[i][0][0];
+            y1 = lineMirrorEndpoints[i][0][1];
+            x2 = lineMirrorEndpoints[i][1][0];
+            y2 = lineMirrorEndpoints[i][1][1];
 
 
             double lenght = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
@@ -247,7 +245,8 @@ class LightPlay {
 
         double o, a, b;
         a = vectorangle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
-        o = lineangle(M[m][0][0], M[m][0][1], M[m][1][0], M[m][1][1]);
+        o = lineangle(lineMirrorEndpoints[m][0][0], lineMirrorEndpoints[m][0][1], lineMirrorEndpoints[m][1][0],
+                      lineMirrorEndpoints[m][1][1]);
         b = 2 * o - a;
         dx = cosine(b);
         dy = sine(b);
@@ -286,22 +285,20 @@ public:
             noLineMirrors(noLineMirrors),
             noCircleMirrors(noCircleMirrors),
             noSquareMirrors(noSquareMirrors) {
-        renderLines();
-        renderCircles();
-        renderSquares();
+        placeLineMirrors();
+        placeCircleMirrors();
+        placeSquareMirrors();
+        placeTarget();
+
         Vector2d click;
 
         n = 2;
         assigntoheap();
 
-        int p;
-
-        p = getClick();
         double x1, y1;
-        x1 = p / 65536;
-        y1 = p % 65536;
-        c[1][0] = c[0][0] = x1;
-        c[1][1] = c[0][1] = y1;
+        registerClick(&click);
+        c[1][0] = c[0][0] = x1 = click.x;
+        c[1][1] = c[0][1] = y1 = click.y;
 
         // Light source
         Circle refer(c[0][0], c[1][1], 75);
@@ -422,5 +419,5 @@ int main() {
     border.imprint();
 
 //define a light class rotate ,reflect until last non reflecting surface.
-    LightPlay p = LightPlay(noLineMirrors, noCircleMirrors, noSquareMirrors);
+    LightPlay lightPlay = LightPlay(noLineMirrors, noCircleMirrors, noSquareMirrors);
 }

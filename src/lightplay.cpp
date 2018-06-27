@@ -9,15 +9,15 @@ class LightPlay {
 
     double dx, dy;//translators
 
-    int noLineMirrors;
-    Line *lineMirrors;
     double lineMirrorEndpoints[200][2][2]; //mirrors end points data******100 at max
+    double circleMirrorCenters[100][2];
 
+    int noLineMirrors;
+    vector<Line> lineMirrors;
     int noCircleMirrors;
-    Circle *circleMirrors;
-
-    double S[100][2];
+    vector<Circle> circleMirrors;
     int noSquareMirrors;
+    vector<Rectangle> squareMirrors;
 
     double tarc[2];
     Circle target;
@@ -69,7 +69,6 @@ class LightPlay {
     }
 
     void placeLineMirrors() {
-        lineMirrors = new Line[noLineMirrors];
         double x1, y1, x2, y2;
         Vector2d click;
         for (int i = 0; i < noLineMirrors; i++) {
@@ -81,22 +80,23 @@ class LightPlay {
             lineMirrorEndpoints[i][1][0] = x2 = click.x;
             lineMirrorEndpoints[i][1][1] = y2 = click.y;
 
-            lineMirrors[i] = Line(x1, y1, x2, y2);
-            lineMirrors[i].setColor(COLOR(160, 160, 160));
+            Line newLineMirror = Line(x1, y1, x2, y2);
+            newLineMirror.setColor(COLOR(160, 160, 160));
+            lineMirrors.push_back(newLineMirror);
         }
     }
 
     void placeCircleMirrors() {
-        circleMirrors = new Circle[noCircleMirrors];
         double x1, y1;
         Vector2d click;
         for (int i = 0; i < noCircleMirrors; i++) {
             registerClick(&click);
-            S[i][0] = x1 = click.x;
-            S[i][1] = y1 = click.y;
+            circleMirrorCenters[i][0] = x1 = click.x;
+            circleMirrorCenters[i][1] = y1 = click.y;
 
-            circleMirrors[i] = Circle(x1, y1, 75);
-            circleMirrors[i].setColor(COLOR(160, 160, 160)).setFill();
+            Circle newCircleMirror = Circle(x1, y1, 75);
+            newCircleMirror.setColor(COLOR(160, 160, 160)).setFill();
+            circleMirrors.push_back(newCircleMirror);
         }
     }
 
@@ -105,7 +105,7 @@ class LightPlay {
      * */
     void placeSquareMirrors() {
         int corr = 0;
-        const double SIDE_LENGTH_OF_SQUARE = 25;
+        const double SIDE_LENGTH_OF_SQUARE = 50;
         double x1, y1;
         Vector2d click;
         for (int i = 0; i < noSquareMirrors; i++) {
@@ -114,11 +114,6 @@ class LightPlay {
             x1 = click.x;
             y1 = click.y;
 
-            {
-                Rectangle source(x1, y1, 50, 50);
-                source.setColor(COLOR(160, 160, 160));
-                source.imprint();
-            }
             lineMirrorEndpoints[noLineMirrors + i + corr][0][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
             lineMirrorEndpoints[noLineMirrors + i + corr][0][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
             lineMirrorEndpoints[noLineMirrors + i + corr][1][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
@@ -139,6 +134,10 @@ class LightPlay {
             lineMirrorEndpoints[noLineMirrors + i + 3 + corr][1][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
             lineMirrorEndpoints[noLineMirrors + i + 3 + corr][1][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
             corr = corr + 3;
+
+            Rectangle newSquareMirror = Rectangle(x1, y1, SIDE_LENGTH_OF_SQUARE, SIDE_LENGTH_OF_SQUARE);
+            newSquareMirror.setColor(COLOR(160, 160, 160)).imprint();
+            squareMirrors.push_back(newSquareMirror);
         }
 
     }
@@ -187,8 +186,8 @@ class LightPlay {
         a = c[n - 1][0];
         b = c[n - 1][1];
         for (int i = 0; i < noCircleMirrors; i++) {
-            x1 = S[i][0];
-            y1 = S[i][1];
+            x1 = circleMirrorCenters[i][0];
+            y1 = circleMirrorCenters[i][1];
 
             double lenght = sqrt((x1 - a) * (x1 - a) + (y1 - b) * (y1 - b));
             if (lenght <= 75.5) {
@@ -207,8 +206,8 @@ class LightPlay {
     void collision(int m) {
 
         double o, a, b;
-        a = vectorangle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
-        o = lineangle(lineMirrorEndpoints[m][0][0], lineMirrorEndpoints[m][0][1], lineMirrorEndpoints[m][1][0],
+        a = rayAngle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
+        o = lineAngle(lineMirrorEndpoints[m][0][0], lineMirrorEndpoints[m][0][1], lineMirrorEndpoints[m][1][0],
                       lineMirrorEndpoints[m][1][1]);
         b = 2 * o - a;
         dx = cosine(b);
@@ -227,8 +226,8 @@ class LightPlay {
         lin.setColor(COLOR(255, 255, 255));
         lightRays.push_back(lin);
         double o1, o, a, b;
-        a = vectorangle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
-        o1 = lineangle(c[n - 1][0], c[n - 1][1], S[m][0], S[m][1]);
+        a = rayAngle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
+        o1 = lineAngle(c[n - 1][0], c[n - 1][1], circleMirrorCenters[m][0], circleMirrorCenters[m][1]);
         if (o1 > 0) { o = o1 - 90; }
         else { o = o1 + 90; }
         b = 2 * o - a;
@@ -289,7 +288,7 @@ public:
             exit = false;
 
             double o;
-            o = vectorangle(x1, y1, click.x, click.y);
+            o = rayAngle(x1, y1, click.x, click.y);
             dx = cosine(o);
             dy = sine(o);
 

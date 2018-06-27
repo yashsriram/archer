@@ -6,7 +6,7 @@
 //******can do better by less checking every time
 //******and more intelligent checking near the mirror
 //******reflection should be more at the mirror
-//******limit on noSquares
+//******limit on noSquareMirrors
 //******sometimes dosent start
 // full game with little optimization + spherical mirrors + cubical mirrors
 //******doesn't handle reflection on both at same time ie corners
@@ -46,15 +46,15 @@ class LightPlay {
 
     double dx, dy;//translators
 
-    int noLines;
+    int noLineMirrors;
     Line *lineMirrors;
     double M[200][2][2]; //mirrors end points data******100 at max
 
-    int noCircles;
+    int noCircleMirrors;
     Circle *circleMirrors;
 
     double S[100][2];
-    int noSquares;
+    int noSquareMirrors;
 
     Circle target;
     double tarc[2];
@@ -106,10 +106,10 @@ class LightPlay {
     }
 
     void renderCircles() {
-        circleMirrors = new Circle[noCircles];
+        circleMirrors = new Circle[noCircleMirrors];
         int p;
         double x1, y1;
-        for (int i = 0; i < noCircles; i++) {
+        for (int i = 0; i < noCircleMirrors; i++) {
             p = getClick();
             S[i][0] = x1 = p / 65536;
             S[i][1] = y1 = p % 65536;
@@ -126,7 +126,7 @@ class LightPlay {
         int p;
         int corr = 0;
         double x1, y1;
-        for (int i = 0; i < noSquares; i++) {
+        for (int i = 0; i < noSquareMirrors; i++) {
 
             p = getClick();
             x1 = p / 65536;
@@ -137,25 +137,25 @@ class LightPlay {
                 source.setColor(COLOR(160, 160, 160));
                 source.imprint();
             }
-            M[noLines + i + corr][0][0] = x1 + 25;
-            M[noLines + i + corr][0][1] = y1 + 25;
-            M[noLines + i + corr][1][0] = x1 - 25;
-            M[noLines + i + corr][1][1] = y1 + 25;
+            M[noLineMirrors + i + corr][0][0] = x1 + 25;
+            M[noLineMirrors + i + corr][0][1] = y1 + 25;
+            M[noLineMirrors + i + corr][1][0] = x1 - 25;
+            M[noLineMirrors + i + corr][1][1] = y1 + 25;
 
-            M[noLines + i + 1 + corr][0][0] = x1 - 25;
-            M[noLines + i + 1 + corr][0][1] = y1 + 25;
-            M[noLines + i + 1 + corr][1][0] = x1 - 25;
-            M[noLines + i + 1 + corr][1][1] = y1 - 25;
+            M[noLineMirrors + i + 1 + corr][0][0] = x1 - 25;
+            M[noLineMirrors + i + 1 + corr][0][1] = y1 + 25;
+            M[noLineMirrors + i + 1 + corr][1][0] = x1 - 25;
+            M[noLineMirrors + i + 1 + corr][1][1] = y1 - 25;
 
-            M[noLines + i + 2 + corr][0][0] = x1 - 25;
-            M[noLines + i + 2 + corr][0][1] = y1 - 25;
-            M[noLines + i + 2 + corr][1][0] = x1 + 25;
-            M[noLines + i + 2 + corr][1][1] = y1 - 25;
+            M[noLineMirrors + i + 2 + corr][0][0] = x1 - 25;
+            M[noLineMirrors + i + 2 + corr][0][1] = y1 - 25;
+            M[noLineMirrors + i + 2 + corr][1][0] = x1 + 25;
+            M[noLineMirrors + i + 2 + corr][1][1] = y1 - 25;
 
-            M[noLines + i + 3 + corr][0][0] = x1 + 25;
-            M[noLines + i + 3 + corr][0][1] = y1 - 25;
-            M[noLines + i + 3 + corr][1][0] = x1 + 25;
-            M[noLines + i + 3 + corr][1][1] = y1 + 25;
+            M[noLineMirrors + i + 3 + corr][0][0] = x1 + 25;
+            M[noLineMirrors + i + 3 + corr][0][1] = y1 - 25;
+            M[noLineMirrors + i + 3 + corr][1][0] = x1 + 25;
+            M[noLineMirrors + i + 3 + corr][1][1] = y1 + 25;
             corr = corr + 3;
         }
 
@@ -171,10 +171,10 @@ class LightPlay {
     }
 
     void renderLines() {
-        lineMirrors = new Line[noLines];
+        lineMirrors = new Line[noLineMirrors];
         int p;
         double x1, y1, x2, y2;
-        for (int i = 0; i < noLines; i++) {
+        for (int i = 0; i < noLineMirrors; i++) {
             p = getClick();
             M[i][0][0] = x1 = p / 65536;
             M[i][0][1] = y1 = p % 65536;
@@ -192,7 +192,7 @@ class LightPlay {
     }
 
     bool on_mirror() {
-        for (int i = 0; i < noLines + noSquares * 16; i++) {
+        for (int i = 0; i < noLineMirrors + noSquareMirrors * 16; i++) {
             double a, b, x1, y1, x2, y2;
             a = c[n - 1][0];
             b = c[n - 1][1];
@@ -225,7 +225,7 @@ class LightPlay {
         double a, b, x1, y1;
         a = c[n - 1][0];
         b = c[n - 1][1];
-        for (int i = 0; i < noCircles; i++) {
+        for (int i = 0; i < noCircleMirrors; i++) {
             x1 = S[i][0];
             y1 = S[i][1];
 
@@ -282,10 +282,10 @@ class LightPlay {
 
 public:
 
-    LightPlay(int noLines, int noCircles, int noSquares) :
-            noLines(noLines),
-            noCircles(noCircles),
-            noSquares(noSquares) {
+    LightPlay(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) :
+            noLineMirrors(noLineMirrors),
+            noCircleMirrors(noCircleMirrors),
+            noSquareMirrors(noSquareMirrors) {
         renderLines();
         renderCircles();
         renderSquares();
@@ -404,11 +404,15 @@ public:
 
 int main() {
 
-    int noLines, noCircles, noSquares;
-    cout << "Spheres-space-Mirrors-space-Cubes-enter   ex: 1 1 1 then press enter" << endl;
-    cin >> noLines >> noCircles >> noSquares;
+    int noLineMirrors, noCircleMirrors, noSquareMirrors;
+    printf("Enter number of Line mirrors");
+    cin >> noLineMirrors;
+    printf("Enter number of Circle mirrors");
+    cin >> noCircleMirrors;
+    printf("Enter number of Square mirrors");
+    cin >> noSquareMirrors;
 
-    initCanvas("light", 1500, 700);
+    initCanvas("LightPlay", 1500, 700);
 
     Rectangle border(750, 350, 1500, 700);
     border.setColor(COLOR(65, 65, 65)).setFill();
@@ -417,10 +421,6 @@ int main() {
     border.setColor(COLOR(0, 0, 0)).setFill();
     border.imprint();
 
-
-
 //define a light class rotate ,reflect until last non reflecting surface.
-
-    LightPlay p = LightPlay(noLines, noCircles, noSquares);
-
+    LightPlay p = LightPlay(noLineMirrors, noCircleMirrors, noSquareMirrors);
 }

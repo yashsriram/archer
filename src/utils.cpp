@@ -40,3 +40,30 @@ double rayAngle(double x1, double y1, double x2, double y2) {
 double rayAngle(const Vector2d *a, const Vector2d *b) {
     return rayAngle(a->x, a->y, b->x, b->y);
 }
+
+double vectorangle(double x1, double y1, double x2, double y2) {
+    double cosineofangle, angle;
+    if ((x2 - x1) != 0) {
+        cosineofangle = ((x2 - x1) / sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)));
+        angle = arccosine(cosineofangle);
+        if (y2 - y1 >= 0)return angle;
+        if (y2 - y1 < 0)return -angle;
+    } else {
+        if (y2 - y1 > 0) return 90;
+        if (y2 - y1 < 0) return -90;
+    }
+    return 0;
+}
+
+//(the order of input matters) OUTPUT -pi to pi
+double lineangle(double x1, double y1, double x2, double y2) {
+    if ((x2 - x1) == 0)return 90;
+
+    double tangentofangle, angle;
+    tangentofangle = ((y2 - y1) / (x2 - x1));
+    angle = arctangent(tangentofangle);
+    return angle;
+
+
+}
+//OUTPUT -pi/2 to pi/2

@@ -3,6 +3,7 @@
 #include "utils.cpp"
 
 class LightPlay {
+
     int n; //no of vertices including the initial point
     double **c; //coordinate of leading point
     vector<Line> lightRays;
@@ -25,7 +26,8 @@ class LightPlay {
     int pass;
     double scale;
 
-    void assignToHeap() {
+    void assignToHeap(int newN) {
+        n = newN;
         c = new double *[n];
         for (int i = 0; i < n; i++) {
             c[i] = new double[2];
@@ -45,8 +47,7 @@ class LightPlay {
         }
         //coordiantes copied
         removeFromHeap();
-        n = n + 1;
-        assignToHeap();
+        assignToHeap(n + 1);
         for (int i = 0; i < n - 1; i++) {
             c[i][0] = swc[i][0];
             c[i][1] = swc[i][1];
@@ -61,6 +62,97 @@ class LightPlay {
         lightRays.push_back(lin);
         target.setColor(COLOR(153, 0, 0));
         wait(2);
+    }
+
+    bool isOnLineMirror() {
+        for (int i = 0; i < noLineMirrors + noSquareMirrors * 16; i++) {
+            double a, b, x1, y1, x2, y2;
+            a = c[n - 1][0];
+            b = c[n - 1][1];
+            x1 = lineMirrorEndpoints[i][0][0];
+            y1 = lineMirrorEndpoints[i][0][1];
+            x2 = lineMirrorEndpoints[i][1][0];
+            y2 = lineMirrorEndpoints[i][1][1];
+
+
+            double lenght = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+            double a1 = sqrt((a - x1) * (a - x1) + (b - y1) * (b - y1)), b1 = sqrt(
+                    (a - x2) * (a - x2) + (b - y2) * (b - y2));
+
+            double sumOfparts = a1 + b1;
+
+            if (abs(lenght - sumOfparts) <= 0.5) {
+                pass = i;
+                return true;
+            }
+
+            if (abs(lenght - sumOfparts) < scale) { scale = abs(lenght - sumOfparts); }
+        }
+
+        if (scale < 1) { scale = 1; }
+
+        return false;
+    }
+
+    bool isOnCircleMirror() {
+        double a, b, x1, y1;
+        a = c[n - 1][0];
+        b = c[n - 1][1];
+        for (int i = 0; i < noCircleMirrors; i++) {
+            x1 = circleMirrorCenters[i][0];
+            y1 = circleMirrorCenters[i][1];
+
+            double lenght = sqrt((x1 - a) * (x1 - a) + (y1 - b) * (y1 - b));
+            if (lenght <= 75.5) {
+                pass = i;
+                return true;
+            }
+
+            if (lenght < scale) { scale = lenght; }
+        }
+
+        if (scale < 1) { scale = 1; }
+
+        return false;
+    }
+
+    void reflectOnLine(int lineMirror) {
+
+        double o, a, b;
+        a = rayAngle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
+        o = lineAngle(lineMirrorEndpoints[lineMirror][0][0],
+                      lineMirrorEndpoints[lineMirror][0][1],
+                      lineMirrorEndpoints[lineMirror][1][0],
+                      lineMirrorEndpoints[lineMirror][1][1]);
+        b = 2 * o - a;
+        dx = cosine(b);
+        dy = sine(b);
+        resetTheSysDuringCollision();
+        Line lin(c[n - 3][0], c[n - 3][1], c[n - 2][0], c[n - 2][1]);
+        lin.setColor(COLOR(255, 255, 255));
+        lightRays.push_back(lin);
+        c[n - 1][0] = c[n - 1][0] + 2 * dx;
+        c[n - 1][1] = c[n - 1][1] + 2 * dy;
+    }
+
+    void reflectOnCircle(int circleMirror) {
+        Line lin(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
+        lin.setColor(COLOR(255, 255, 255));
+        lightRays.push_back(lin);
+        double o1, o, a, b;
+        a = rayAngle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
+        o1 = lineAngle(c[n - 1][0], c[n - 1][1],
+                       circleMirrorCenters[circleMirror][0],
+                       circleMirrorCenters[circleMirror][1]);
+        if (o1 > 0) { o = o1 - 90; }
+        else { o = o1 + 90; }
+        b = 2 * o - a;
+        dx = cosine(b);
+        dy = sine(b);
+        resetTheSysDuringCollision();
+        c[n - 1][0] = c[n - 1][0] + 2 * dx;
+        c[n - 1][1] = c[n - 1][1] + 2 * dy;
+        //Circle flag(c[n-1][0],c[n-1][1],10);
     }
 
     void placeLineMirrors() {
@@ -146,93 +238,6 @@ class LightPlay {
         target.setColor(COLOR(0, 204, 0)).setFill();
     }
 
-    bool isOnLineMirror() {
-        for (int i = 0; i < noLineMirrors + noSquareMirrors * 16; i++) {
-            double a, b, x1, y1, x2, y2;
-            a = c[n - 1][0];
-            b = c[n - 1][1];
-            x1 = lineMirrorEndpoints[i][0][0];
-            y1 = lineMirrorEndpoints[i][0][1];
-            x2 = lineMirrorEndpoints[i][1][0];
-            y2 = lineMirrorEndpoints[i][1][1];
-
-
-            double lenght = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-            double a1 = sqrt((a - x1) * (a - x1) + (b - y1) * (b - y1)), b1 = sqrt(
-                    (a - x2) * (a - x2) + (b - y2) * (b - y2));
-
-            double sumOfparts = a1 + b1;
-
-            if (abs(lenght - sumOfparts) <= 0.5) {
-                pass = i;
-                return true;
-            }
-
-            if (abs(lenght - sumOfparts) < scale) { scale = abs(lenght - sumOfparts); }
-        }
-
-        if (scale < 1) { scale = 1; }
-
-        return false;
-    }
-
-    bool isOnCircleMirror() {
-        double a, b, x1, y1;
-        a = c[n - 1][0];
-        b = c[n - 1][1];
-        for (int i = 0; i < noCircleMirrors; i++) {
-            x1 = circleMirrorCenters[i][0];
-            y1 = circleMirrorCenters[i][1];
-
-            double lenght = sqrt((x1 - a) * (x1 - a) + (y1 - b) * (y1 - b));
-            if (lenght <= 75.5) {
-                pass = i;
-                return true;
-            }
-
-            if (lenght < scale) { scale = lenght; }
-        }
-
-        if (scale < 1) { scale = 1; }
-
-        return false;
-    }
-
-    void reflectOnLine(int lineMirror) {
-
-        double o, a, b;
-        a = rayAngle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
-        o = lineAngle(lineMirrorEndpoints[lineMirror][0][0], lineMirrorEndpoints[lineMirror][0][1], lineMirrorEndpoints[lineMirror][1][0],
-                      lineMirrorEndpoints[lineMirror][1][1]);
-        b = 2 * o - a;
-        dx = cosine(b);
-        dy = sine(b);
-        resetTheSysDuringCollision();
-        Line lin(c[n - 3][0], c[n - 3][1], c[n - 2][0], c[n - 2][1]);
-        lin.setColor(COLOR(255, 255, 255));
-        lightRays.push_back(lin);
-        c[n - 1][0] = c[n - 1][0] + 2 * dx;
-        c[n - 1][1] = c[n - 1][1] + 2 * dy;
-    }
-
-    void reflectOnCircle(int circleMirror) {
-        Line lin(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
-        lin.setColor(COLOR(255, 255, 255));
-        lightRays.push_back(lin);
-        double o1, o, a, b;
-        a = rayAngle(c[n - 2][0], c[n - 2][1], c[n - 1][0], c[n - 1][1]);
-        o1 = lineAngle(c[n - 1][0], c[n - 1][1], circleMirrorCenters[circleMirror][0], circleMirrorCenters[circleMirror][1]);
-        if (o1 > 0) { o = o1 - 90; }
-        else { o = o1 + 90; }
-        b = 2 * o - a;
-        dx = cosine(b);
-        dy = sine(b);
-        resetTheSysDuringCollision();
-        c[n - 1][0] = c[n - 1][0] + 2 * dx;
-        c[n - 1][1] = c[n - 1][1] + 2 * dy;
-        //Circle flag(c[n-1][0],c[n-1][1],10);
-    }
-
 public:
 
     LightPlay(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) :
@@ -246,48 +251,46 @@ public:
 
         Vector2d click;
 
-        n = 2;
-        assignToHeap();
+        assignToHeap(2);
 
-        double x1, y1;
+        double x, y;
         registerClick(&click);
-        c[1][0] = c[0][0] = x1 = click.x;
-        c[1][1] = c[0][1] = y1 = click.y;
+        c[1][0] = c[0][0] = x = click.x;
+        c[1][1] = c[0][1] = y = click.y;
 
-        // Light source
-        Circle refer(c[0][0], c[1][1], 75);
-        refer.setColor(COLOR(242, 17, 17)).imprint();
+        // Source
+        Circle src1(x, y, 75);
+        src1.setColor(COLOR(242, 17, 17)).imprint();
 
-        refer.reset(c[0][0], c[1][1], 50);
-        refer.setColor(COLOR(242, 187, 17)).imprint();
+        Circle src2(x, y, 50);
+        src2.setColor(COLOR(242, 187, 17)).imprint();
 
-        refer.reset(c[0][0], c[1][1], 25);
-        refer.setColor(COLOR(242, 137, 17)).imprint();
+        Circle src3(x, y, 25);
+        src3.setColor(COLOR(242, 137, 17)).imprint();
 
-        refer.reset(c[0][0], c[1][1], 2);
-        refer.setColor(COLOR(24, 137, 17)).imprint();
+        Circle src4(x, y, 2);
+        src4.setColor(COLOR(24, 137, 17)).imprint();
 
 
         int checker = 0;
         scale = 1;
         while (true) {
             registerClick(&click);
-            if (Vector2d(click.x - x1, click.y - y1).length() <= 75) { break; }
+            if (Vector2d(click.x - x, click.y - y).length() <= 75) { break; }
         }
-
         bool exit;
         while (true) {
             exit = false;
 
             double o;
-            o = rayAngle(x1, y1, click.x, click.y);
+            o = rayAngle(x, y, click.x, click.y);
             dx = cosine(o);
             dy = sine(o);
 
-            //initiator launched
-
-
+            // single walk
             while (true) {
+
+                // single ray
                 while (true) {
                     //cout<<"i";
 
@@ -320,30 +323,26 @@ public:
 
             }
 
-
             //travels in way checks any reflection
             //distance calculating fn and hence reftector
             //resetting the system
             //storing new point data into the corres variables
             //end the reflections and create lines
             if (exit) { break; }
+
             while (true) {
                 registerClick(&click);
-                if (Vector2d(click.x - x1, click.y - y1).length() <= 75) { break; }
+                if (Vector2d(click.x - x, click.y - y).length() <= 75) { break; }
             }
 
-            {//resetting the system
-                //Line zero(0,0,0,0);
-                //for(size_t i=0;i<lightRays.size();i++){lightRays[i]=zero;}
-                lightRays.resize(0);
-                removeFromHeap();
-                n = 2;
-                assignToHeap();
-                c[1][0] = c[0][0] = x1;
-                c[1][1] = c[0][1] = y1;
-            }
-
-
+            //resetting the system
+            //Line zero(0,0,0,0);
+            //for(size_t i=0;i<lightRays.size();i++){lightRays[i]=zero;}
+            lightRays.clear();
+            removeFromHeap();
+            assignToHeap(2);
+            c[1][0] = c[0][0] = x;
+            c[1][1] = c[0][1] = y;
         }
         //cout<<checker;
     }

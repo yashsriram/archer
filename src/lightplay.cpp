@@ -1,6 +1,4 @@
 #include "utils.cpp"
-#include "light.cpp"
-#include "mirrors.cpp"
 
 class Light {
     vector<Line> rays;
@@ -215,7 +213,7 @@ class LightPlay {
         wait(2);
     }
 
-    void reflect(const Vector2d *e1,const  Vector2d* e2) {
+    void reflect(const Vector2d *e1, const Vector2d *e2) {
         light->newRay();
         double a = light->getDirection();
         double o = lineAngle(e1->x, e1->y, e2->x, e2->y);

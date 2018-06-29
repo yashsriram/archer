@@ -3,7 +3,7 @@
     - [x] mirrors class
     - [x] limits in number of mirrors
     - [x] light play class
-    - [ ] tidy code
+    - [x] tidy code
 - [ ] improve placement
     - [ ] text box
 - [ ] improve game

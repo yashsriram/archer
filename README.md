@@ -1,6 +1,4 @@
 ## Light Play
-
-## What is it?
 * Light Play is a 2d simulator/game of light
 * It simulates reflection in presence of different types of mirrors
 
@@ -9,4 +7,4 @@
 * You can control its the direction
 * The goal is to hit the green balloon and pop it
 * But Alas! The mirrors are in the way!
-* Your mission should you choose to accept it is to find a way through them and hit the balloon
+* Your mission (should you choose to accept it) is to find a way through them using reflections and hit the balloon

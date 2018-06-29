@@ -3,12 +3,12 @@
 
 class Light {
     vector<Line> rays;
-    const Vector2d *tail;
+    const Vector2d *epoch;
     Vector2d *head;
     double direction;
     double dx, dy;
 public:
-    explicit Light(const Vector2d epoch) : tail(new Vector2d(epoch)),
+    explicit Light(const Vector2d epoch) : epoch(new Vector2d(epoch)),
                                            head(new Vector2d(epoch)),
                                            direction(0),
                                            dx(cosine(0)),
@@ -16,7 +16,7 @@ public:
 
     ~Light() {
         delete head;
-        delete tail;
+        delete epoch;
     }
 
     Vector2d getHead() {
@@ -35,7 +35,7 @@ public:
 
     void newRay() {
         if (rays.empty()) {
-            Line line(tail->x, tail->y, head->x, head->y);
+            Line line(epoch->x, epoch->y, head->x, head->y);
             line.setColor(COLOR(255, 255, 255));
             rays.push_back(line);
         } else {
@@ -51,9 +51,13 @@ public:
         head->y += factor * dy;
     }
 
+    bool isHeadOnWall() {
+        return head->x >= 1450 || head->x <= 50 || head->y >= 650 || head->y <= 50;
+    }
+
     void reset() {
         rays.clear();
-        head->set(tail);
+        head->set(epoch);
         direction = dx = dy = 0;
     }
 };
@@ -212,9 +216,10 @@ class LightPlay {
         light->newRay();
         target.setColor(COLOR(153, 0, 0));
         wait(2);
+        cout << "PASSED" << endl;
     }
 
-    void reflect(const Vector2d *e1,const  Vector2d* e2) {
+    void reflectOnLine(const Vector2d *e1, const Vector2d *e2) {
         light->newRay();
         double a = light->getDirection();
         double o = lineAngle(e1->x, e1->y, e2->x, e2->y);
@@ -223,7 +228,7 @@ class LightPlay {
         light->moveHead(2);
     }
 
-    void reflect(const Vector2d *center) {
+    void reflectOnCircle(const Vector2d *center) {
         light->newRay();
         double a = light->getDirection();
         Vector2d lightHead = light->getHead();
@@ -257,66 +262,55 @@ class LightPlay {
 
 public:
 
-    LightPlay(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) : scale(1) {
+    LightPlay(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) {
+        scale = 1;
         mirrors = new Mirrors(noLineMirrors, noCircleMirrors, noSquareMirrors);
         const Vector2d epoch = placeSource();
-        placeTarget();
         light = new Light(epoch);
+        placeTarget();
 
-        Vector2d click;
-        while (true) {
-            registerClick(&click);
-            if (Vector2d(click.x - epoch.x, click.y - epoch.y).length() <= 75) { break; }
-        }
-        bool exit;
         // single game
         while (true) {
-            exit = false;
-            double o = rayAngle(epoch.x, epoch.y, click.x, click.y);
-            light->setDirection(o);
+            Vector2d click;
             Vector2d lightHead;
-            // single walk
-            while (true) {
 
-                // single ray
-                while (true) {
-                    light->moveHead(scale);
-                    lightHead = light->getHead();
-                    if (Vector2d(lightHead.x - target.getX(), lightHead.y - target.getY()).length() <= 50) {
-                        reachedTargetCallback();
-                        exit = true;
-                        cout << "PASSED" << endl;
-                        break;
-                    }
-                    Vector2d e1, e2;
-                    Vector2d center;
-                    if (mirrors->isOnLineMirror(&lightHead, &e1, &e2, &scale)) { reflect(&e1, &e2); }
-                    if (mirrors->isOnCircleMirror(&lightHead, &center, &scale)) { reflect(&center); }
-
-                    lightHead = light->getHead();
-                    if (lightHead.x >= 1450 || lightHead.x <= 50 || lightHead.y >= 650 || lightHead.y <= 50) { break; }
-                }
-                if (exit) { break; }
-                if (lightHead.x >= 1450 || lightHead.x <= 50 || lightHead.y >= 650 || lightHead.y <= 50) {
-                    light->newRay();
-                    break;
-                }
-
-            }
-
-            //travels in way checks any reflection
-            //distance calculating fn and hence reftector
-            //resetting the system
-            //storing new_ point data into the corres variables
-            //end the reflections and create lines
-            if (exit) { break; }
-
+            // reset
             while (true) {
                 registerClick(&click);
                 if (Vector2d(click.x - epoch.x, click.y - epoch.y).length() <= 75) { break; }
             }
-
             light->reset();
+
+            // light
+            light->setDirection(rayAngle(epoch.x, epoch.y, click.x, click.y));
+            while (true) {
+                // ray
+                while (true) {
+                    light->moveHead(scale);
+                    lightHead = light->getHead();
+                    // hit target
+                    if (Vector2d(lightHead.x - target.getX(), lightHead.y - target.getY()).length() <= 50) {
+                        reachedTargetCallback();
+                        return;
+                    }
+                    // hit wall
+                    if (light->isHeadOnWall()) {
+                        light->newRay();
+                        break;
+                    }
+                    // hit line mirror
+                    Vector2d e1, e2;
+                    if (mirrors->isOnLineMirror(&lightHead, &e1, &e2, &scale)) {
+                        reflectOnLine(&e1, &e2);
+                    }
+                    // hit circle mirror
+                    Vector2d center;
+                    if (mirrors->isOnCircleMirror(&lightHead, &center, &scale)) {
+                        reflectOnCircle(&center);
+                    }
+                }
+                if (light->isHeadOnWall()) { break; }
+            }
         }
     }
 

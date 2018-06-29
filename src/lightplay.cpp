@@ -2,6 +2,8 @@
 #include "utils.cpp"
 
 class Light {
+    constexpr static Color LIGHT_COLOR = COLOR(255, 255, 255);
+
     vector<Line> rays;
     const Vector2d *epoch;
     Vector2d *head;
@@ -36,12 +38,12 @@ public:
     void newRay() {
         if (rays.empty()) {
             Line line(epoch->x, epoch->y, head->x, head->y);
-            line.setColor(COLOR(255, 255, 255));
+            line.setColor(LIGHT_COLOR);
             rays.push_back(line);
         } else {
             Position penultimateHead = rays.rbegin()[0].getEnd();
             Line line(penultimateHead.x, penultimateHead.y, head->x, head->y);
-            line.setColor(COLOR(255, 255, 255));
+            line.setColor(LIGHT_COLOR);
             rays.push_back(line);
         }
     }
@@ -49,10 +51,6 @@ public:
     void moveHead(double factor) {
         head->x += factor * dx;
         head->y += factor * dy;
-    }
-
-    bool isHeadOnWall() {
-        return head->x >= 1450 || head->x <= 50 || head->y >= 650 || head->y <= 50;
     }
 
     void reset() {
@@ -63,6 +61,12 @@ public:
 };
 
 class Mirrors {
+    constexpr static double RADIUS_OF_CIRCLE = 75;
+    constexpr static double SIDE_LENGTH_OF_SQUARE = 80;
+    constexpr static double MIRROR_APPROACH_MARGIN = 0.5;
+
+    constexpr static Color MIRROR_COLOR = COLOR(160, 160, 160);
+
     vector<Line> lineMirrors;
     vector<Circle> circleMirrors;
 
@@ -80,7 +84,7 @@ class Mirrors {
             y2 = click.y;
 
             Line newLineMirror = Line(x1, y1, x2, y2);
-            newLineMirror.setColor(COLOR(160, 160, 160));
+            newLineMirror.setColor(MIRROR_COLOR);
             lineMirrors.push_back(newLineMirror);
         }
     }
@@ -89,8 +93,8 @@ class Mirrors {
         Vector2d click;
         for (int i = 0; i < noCircleMirrors; i++) {
             registerClick(&click);
-            Circle newCircleMirror = Circle(click.x, click.y, 75);
-            newCircleMirror.setColor(COLOR(160, 160, 160)).setFill();
+            Circle newCircleMirror = Circle(click.x, click.y, RADIUS_OF_CIRCLE);
+            newCircleMirror.setColor(MIRROR_COLOR).setFill();
             circleMirrors.push_back(newCircleMirror);
         }
     }
@@ -99,7 +103,6 @@ class Mirrors {
      * Square mirror is nothing but set of 4 Line mirrors
      * */
     void placeSquareMirrors(int noSquareMirrors) {
-        const double SIDE_LENGTH_OF_SQUARE = 80;
         double x1, y1;
         Vector2d click;
         for (int i = 0; i < noSquareMirrors; i++) {
@@ -112,7 +115,7 @@ class Mirrors {
                     y1 + SIDE_LENGTH_OF_SQUARE / 2,
                     x1 - SIDE_LENGTH_OF_SQUARE / 2,
                     y1 + SIDE_LENGTH_OF_SQUARE / 2);
-            a.setColor(COLOR(160, 160, 160));
+            a.setColor(MIRROR_COLOR);
             lineMirrors.push_back(a);
 
             Line b = Line(
@@ -120,7 +123,7 @@ class Mirrors {
                     y1 + SIDE_LENGTH_OF_SQUARE / 2,
                     x1 - SIDE_LENGTH_OF_SQUARE / 2,
                     y1 - SIDE_LENGTH_OF_SQUARE / 2);
-            b.setColor(COLOR(160, 160, 160));
+            b.setColor(MIRROR_COLOR);
             lineMirrors.push_back(b);
 
             Line c = Line(
@@ -128,7 +131,7 @@ class Mirrors {
                     y1 - SIDE_LENGTH_OF_SQUARE / 2,
                     x1 + SIDE_LENGTH_OF_SQUARE / 2,
                     y1 - SIDE_LENGTH_OF_SQUARE / 2);
-            c.setColor(COLOR(160, 160, 160));
+            c.setColor(MIRROR_COLOR);
             lineMirrors.push_back(c);
 
             Line d = Line(
@@ -136,7 +139,7 @@ class Mirrors {
                     y1 - SIDE_LENGTH_OF_SQUARE / 2,
                     x1 + SIDE_LENGTH_OF_SQUARE / 2,
                     y1 + SIDE_LENGTH_OF_SQUARE / 2);
-            d.setColor(COLOR(160, 160, 160));
+            d.setColor(MIRROR_COLOR);
             lineMirrors.push_back(d);
         }
     }
@@ -168,7 +171,7 @@ public:
 
             double distanceThroughLightHead = distanceToOneEndpoint + distanceToOtherEndpoint;
 
-            if (abs(lengthOfMirror - distanceThroughLightHead) <= 0.5) {
+            if (abs(lengthOfMirror - distanceThroughLightHead) <= MIRROR_APPROACH_MARGIN) {
                 *e1 = Vector2d(line.getStart().x, line.getStart().y);
                 *e2 = Vector2d(line.getEnd().x, line.getEnd().y);
                 return true;
@@ -190,7 +193,7 @@ public:
             double y1 = circle.getY();
 
             double distanceFromCenter = Vector2d(x1 - px, y1 - py).length();
-            if (distanceFromCenter - 75 <= 0.5) {
+            if (distanceFromCenter - RADIUS_OF_CIRCLE <= MIRROR_APPROACH_MARGIN) {
                 *center = Vector2d(circle.getX(), circle.getY());
                 return true;
             }
@@ -204,9 +207,19 @@ public:
 };
 
 class LightPlay {
+    constexpr static double RADIUS_OF_TARGET = 50;
+    constexpr static double RADIUS_OF_SOURCE = 75;
+    constexpr static double WINDOW_WIDTH = 1500;
+    constexpr static double WINDOW_HEIGHT = 700;
+    constexpr static double WINDOW_PADDING = 50;
+
+    constexpr static Color TARGET_COLOR_ON_HIT = COLOR(153, 0, 0);
+    constexpr static Color TARGET_COLOR_NORMAL = COLOR(0, 204, 0);
+
     Light *light;
     Mirrors *mirrors;
 
+    Rectangle border1, border2;
     Circle target;
     Circle src1, src2, src3, src4;
 
@@ -214,7 +227,7 @@ class LightPlay {
 
     void reachedTargetCallback() {
         light->newRay();
-        target.setColor(COLOR(153, 0, 0));
+        target.setColor(TARGET_COLOR_ON_HIT);
         wait(2);
         cout << "PASSED" << endl;
     }
@@ -242,28 +255,47 @@ class LightPlay {
     void placeTarget() {
         Vector2d click;
         registerClick(&click);
-        target = Circle(click.x, click.y, 50);
-        target.setColor(COLOR(0, 204, 0)).setFill();
+        target = Circle(click.x, click.y, RADIUS_OF_TARGET);
+        target.setColor(TARGET_COLOR_NORMAL).setFill();
     }
 
     Vector2d placeSource() {
         Vector2d click;
         registerClick(&click);
-        src1.reset(click.x, click.y, 75);
+        src1.reset(click.x, click.y, RADIUS_OF_SOURCE);
         src1.setColor(COLOR(242, 17, 17)).imprint();
-        src2.reset(click.x, click.y, 50);
+        src2.reset(click.x, click.y, RADIUS_OF_SOURCE * 0.75);
         src2.setColor(COLOR(242, 187, 17)).imprint();
-        src3.reset(click.x, click.y, 25);
+        src3.reset(click.x, click.y, RADIUS_OF_SOURCE * 0.25);
         src3.setColor(COLOR(242, 137, 17)).imprint();
-        src4.reset(click.x, click.y, 2);
+        src4.reset(click.x, click.y, RADIUS_OF_SOURCE * 0.05);
         src4.setColor(COLOR(24, 137, 17)).imprint();
         return click;
+    }
+
+    void drawWalls() {
+        border1 = Rectangle(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, WINDOW_WIDTH, WINDOW_HEIGHT);
+        border1.setColor(COLOR(65, 65, 65)).setFill();
+        border1.imprint();
+        border2 = Rectangle(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2,
+                            WINDOW_WIDTH - 2 * WINDOW_PADDING,
+                            WINDOW_HEIGHT - 2 * WINDOW_PADDING);
+        border2.setColor(COLOR(0, 0, 0)).setFill();
+        border2.imprint();
+    }
+
+    bool isOnWall(const Vector2d *point) {
+        return point->x <= WINDOW_PADDING
+               || point->y <= WINDOW_PADDING
+               || point->x >= WINDOW_WIDTH - WINDOW_PADDING
+               || point->y >= WINDOW_HEIGHT - WINDOW_PADDING;
     }
 
 public:
 
     LightPlay(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) {
         scale = 1;
+        drawWalls();
         mirrors = new Mirrors(noLineMirrors, noCircleMirrors, noSquareMirrors);
         const Vector2d epoch = placeSource();
         light = new Light(epoch);
@@ -294,7 +326,7 @@ public:
                         return;
                     }
                     // hit wall
-                    if (light->isHeadOnWall()) {
+                    if (isOnWall(&lightHead)) {
                         light->newRay();
                         break;
                     }
@@ -309,7 +341,7 @@ public:
                         reflectOnCircle(&center);
                     }
                 }
-                if (light->isHeadOnWall()) { break; }
+                if (isOnWall(&lightHead)) { break; }
             }
         }
     }

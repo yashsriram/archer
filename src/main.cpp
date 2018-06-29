@@ -25,13 +25,6 @@ int main() {
 
     initCanvas("LightPlay", 1500, 700);
 
-    Rectangle border(750, 350, 1500, 700);
-    border.setColor(COLOR(65, 65, 65)).setFill();
-    border.imprint();
-    border.reset(750, 350, 1400, 600);
-    border.setColor(COLOR(0, 0, 0)).setFill();
-    border.imprint();
-
 //define a light class rotate ,reflect until last non reflecting surface.
     LightPlay lightPlay = LightPlay(noLineMirrors, noCircleMirrors, noSquareMirrors);
 }

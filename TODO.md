@@ -1,0 +1,9 @@
+- [ ] improve code
+    - [x] light class
+    - [x] mirrors class
+    - [ ] light play class
+    - [ ] tidy code
+- [ ] improve placement
+    - [ ] text box
+- [ ] improve game
+    - [ ] no trials

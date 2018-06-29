@@ -8,11 +8,11 @@ class Light {
     double direction;
     double dx, dy;
 public:
-    Light(Vector2d *epoch) : tail(new Vector2d(epoch)),
-                             head(new Vector2d(epoch)),
-                             direction(0),
-                             dx(cosine(0)),
-                             dy(sine(0)) {}
+    explicit Light(const Vector2d epoch) : tail(new Vector2d(epoch)),
+                                           head(new Vector2d(epoch)),
+                                           direction(0),
+                                           dx(cosine(0)),
+                                           dy(sine(0)) {}
 
     ~Light() {
         delete head;
@@ -58,120 +58,22 @@ public:
     }
 };
 
-class LightPlay {
-    Light *light;
-
-    double lineMirrorEndpoints[200][2][2]; //mirrors end points data******100 at max
-    double circleMirrorCenters[100][2];
-
-    int noLineMirrors;
+class Mirrors {
     vector<Line> lineMirrors;
-    int noCircleMirrors;
     vector<Circle> circleMirrors;
-    int noSquareMirrors;
-    vector<Rectangle> squareMirrors;
 
-    double tarc[2];
-    Circle target;
-
-    int pass;
-    double scale;
-
-    void reachedTargetCallback() {
-        light->newRay();
-        target.setColor(COLOR(153, 0, 0));
-        wait(2);
-    }
-
-    bool isOnLineMirror() {
-        for (int i = 0; i < noLineMirrors + noSquareMirrors * 16; i++) {
-
-            Vector2d lightHead = light->getHead();
-            double lhx = lightHead.x;
-            double lhy = lightHead.y;
-
-            double x1 = lineMirrorEndpoints[i][0][0];
-            double y1 = lineMirrorEndpoints[i][0][1];
-
-            double x2 = lineMirrorEndpoints[i][1][0];
-            double y2 = lineMirrorEndpoints[i][1][1];
-
-            double lengthOfMirror = Vector2d(x1 - x2, y1 - y2).length();
-            double distanceToOneEndpoint = Vector2d(lhx - x1, lhy - y1).length();
-            double distanceToOtherEndpoint = Vector2d(lhx - x2, lhy - y2).length();
-
-            double distanceThroughLightHead = distanceToOneEndpoint + distanceToOtherEndpoint;
-
-            if (abs(lengthOfMirror - distanceThroughLightHead) <= 0.5) {
-                pass = i;
-                return true;
-            }
-            if (abs(lengthOfMirror - distanceThroughLightHead) < scale) {
-                scale = abs(lengthOfMirror - distanceThroughLightHead);
-            }
-        }
-        if (scale < 1) { scale = 1; }
-        return false;
-    }
-
-    bool isOnCircleMirror() {
-        Vector2d lightHead = light->getHead();
-        const double lhx = lightHead.x;
-        const double lhy = lightHead.y;
-
-        for (int i = 0; i < noCircleMirrors; i++) {
-            double x1 = circleMirrorCenters[i][0];
-            double y1 = circleMirrorCenters[i][1];
-
-            double distanceFromCenter = Vector2d(x1 - lhx, y1 - lhy).length();
-            if (distanceFromCenter <= 75.5) {
-                pass = i;
-                return true;
-            }
-
-            if (distanceFromCenter < scale) { scale = distanceFromCenter; }
-        }
-
-        if (scale < 1) { scale = 1; }
-        return false;
-    }
-
-    void reflectOnLine(int lineMirror) {
-        light->newRay();
-        double a = light->getDirection();
-        double o = lineAngle(lineMirrorEndpoints[lineMirror][0][0],
-                             lineMirrorEndpoints[lineMirror][0][1],
-                             lineMirrorEndpoints[lineMirror][1][0],
-                             lineMirrorEndpoints[lineMirror][1][1]);
-        double b = 2 * o - a;
-        light->setDirection(b);
-        light->moveHead(2);
-    }
-
-    void reflectOnCircle(int circleMirror) {
-        light->newRay();
-        double a = light->getDirection();
-        Vector2d lightHead = light->getHead();
-        double o1 = lineAngle(lightHead.x, lightHead.y,
-                              circleMirrorCenters[circleMirror][0],
-                              circleMirrorCenters[circleMirror][1]);
-        double o = o1 > 0 ? o1 - 90 : o1 + 90;
-        double b = 2 * o - a;
-        light->setDirection(b);
-        light->moveHead(2);
-    }
-
-    void placeLineMirrors() {
+    void placeLineMirrors(int noLineMirrors) {
         double x1, y1, x2, y2;
         Vector2d click;
         for (int i = 0; i < noLineMirrors; i++) {
-            registerClick(&click);
-            lineMirrorEndpoints[i][0][0] = x1 = click.x;
-            lineMirrorEndpoints[i][0][1] = y1 = click.y;
 
             registerClick(&click);
-            lineMirrorEndpoints[i][1][0] = x2 = click.x;
-            lineMirrorEndpoints[i][1][1] = y2 = click.y;
+            x1 = click.x;
+            y1 = click.y;
+
+            registerClick(&click);
+            x2 = click.x;
+            y2 = click.y;
 
             Line newLineMirror = Line(x1, y1, x2, y2);
             newLineMirror.setColor(COLOR(160, 160, 160));
@@ -179,15 +81,11 @@ class LightPlay {
         }
     }
 
-    void placeCircleMirrors() {
-        double x1, y1;
+    void placeCircleMirrors(int noCircleMirrors) {
         Vector2d click;
         for (int i = 0; i < noCircleMirrors; i++) {
             registerClick(&click);
-            circleMirrorCenters[i][0] = x1 = click.x;
-            circleMirrorCenters[i][1] = y1 = click.y;
-
-            Circle newCircleMirror = Circle(x1, y1, 75);
+            Circle newCircleMirror = Circle(click.x, click.y, 75);
             newCircleMirror.setColor(COLOR(160, 160, 160)).setFill();
             circleMirrors.push_back(newCircleMirror);
         }
@@ -196,83 +94,176 @@ class LightPlay {
     /**
      * Square mirror is nothing but set of 4 Line mirrors
      * */
-    void placeSquareMirrors() {
-        int corr = 0;
+    void placeSquareMirrors(int noSquareMirrors) {
         const double SIDE_LENGTH_OF_SQUARE = 50;
         double x1, y1;
         Vector2d click;
         for (int i = 0; i < noSquareMirrors; i++) {
-
             registerClick(&click);
             x1 = click.x;
             y1 = click.y;
 
-            lineMirrorEndpoints[noLineMirrors + i + corr][0][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + corr][0][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + corr][1][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + corr][1][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
+            Line a = Line(
+                    x1 + SIDE_LENGTH_OF_SQUARE / 2,
+                    y1 + SIDE_LENGTH_OF_SQUARE / 2,
+                    x1 - SIDE_LENGTH_OF_SQUARE / 2,
+                    y1 + SIDE_LENGTH_OF_SQUARE / 2);
+            a.setColor(COLOR(160, 160, 160));
+            lineMirrors.push_back(a);
 
-            lineMirrorEndpoints[noLineMirrors + i + 1 + corr][0][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 1 + corr][0][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 1 + corr][1][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 1 + corr][1][1] = y1 - SIDE_LENGTH_OF_SQUARE / 2;
+            Line b = Line(
+                    x1 - SIDE_LENGTH_OF_SQUARE / 2,
+                    y1 + SIDE_LENGTH_OF_SQUARE / 2,
+                    x1 - SIDE_LENGTH_OF_SQUARE / 2,
+                    y1 - SIDE_LENGTH_OF_SQUARE / 2);
+            b.setColor(COLOR(160, 160, 160));
+            lineMirrors.push_back(b);
 
-            lineMirrorEndpoints[noLineMirrors + i + 2 + corr][0][0] = x1 - SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 2 + corr][0][1] = y1 - SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 2 + corr][1][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 2 + corr][1][1] = y1 - SIDE_LENGTH_OF_SQUARE / 2;
+            Line c = Line(
+                    x1 - SIDE_LENGTH_OF_SQUARE / 2,
+                    y1 - SIDE_LENGTH_OF_SQUARE / 2,
+                    x1 + SIDE_LENGTH_OF_SQUARE / 2,
+                    y1 - SIDE_LENGTH_OF_SQUARE / 2);
+            c.setColor(COLOR(160, 160, 160));
+            lineMirrors.push_back(c);
 
-            lineMirrorEndpoints[noLineMirrors + i + 3 + corr][0][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 3 + corr][0][1] = y1 - SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 3 + corr][1][0] = x1 + SIDE_LENGTH_OF_SQUARE / 2;
-            lineMirrorEndpoints[noLineMirrors + i + 3 + corr][1][1] = y1 + SIDE_LENGTH_OF_SQUARE / 2;
-            corr = corr + 3;
+            Line d = Line(
+                    x1 + SIDE_LENGTH_OF_SQUARE / 2,
+                    y1 - SIDE_LENGTH_OF_SQUARE / 2,
+                    x1 + SIDE_LENGTH_OF_SQUARE / 2,
+                    y1 + SIDE_LENGTH_OF_SQUARE / 2);
+            d.setColor(COLOR(160, 160, 160));
+            lineMirrors.push_back(d);
+        }
+    }
 
-            Rectangle newSquareMirror = Rectangle(x1, y1, SIDE_LENGTH_OF_SQUARE, SIDE_LENGTH_OF_SQUARE);
-            newSquareMirror.setColor(COLOR(160, 160, 160)).imprint();
-            squareMirrors.push_back(newSquareMirror);
+public:
+    Mirrors(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) {
+        placeLineMirrors(noLineMirrors);
+        placeCircleMirrors(noCircleMirrors);
+        placeSquareMirrors(noSquareMirrors);
+    }
+
+    bool isOnLineMirror(const Vector2d *point, Vector2d *e1, Vector2d *e2, double *scale) {
+        double px = point->x;
+        double py = point->y;
+
+        for (auto &line : lineMirrors) {
+
+            Position start = line.getStart();
+            double x1 = start.x;
+            double y1 = start.y;
+
+            Position end = line.getEnd();
+            double x2 = end.x;
+            double y2 = end.y;
+
+            double lengthOfMirror = Vector2d(x1 - x2, y1 - y2).length();
+            double distanceToOneEndpoint = Vector2d(px - x1, py - y1).length();
+            double distanceToOtherEndpoint = Vector2d(px - x2, py - y2).length();
+
+            double distanceThroughLightHead = distanceToOneEndpoint + distanceToOtherEndpoint;
+
+            if (abs(lengthOfMirror - distanceThroughLightHead) <= 0.5) {
+                *e1 = Vector2d(line.getStart().x, line.getStart().y);
+                *e2 = Vector2d(line.getEnd().x, line.getEnd().y);
+                return true;
+            }
+            if (abs(lengthOfMirror - distanceThroughLightHead) < *scale) {
+                *scale = abs(lengthOfMirror - distanceThroughLightHead);
+            }
+        }
+        if (*scale < 1) { *scale = 1; }
+        return false;
+    }
+
+    bool isOnCircleMirror(const Vector2d *point, Vector2d *center, double *scale) {
+        double px = point->x;
+        double py = point->y;
+
+        for (auto &circle : circleMirrors) {
+            double x1 = circle.getX();
+            double y1 = circle.getY();
+
+            double distanceFromCenter = Vector2d(x1 - px, y1 - py).length();
+            if (distanceFromCenter - 75 <= 0.5) {
+                *center = Vector2d(circle.getX(), circle.getY());
+                return true;
+            }
+
+            if (distanceFromCenter < *scale) { *scale = distanceFromCenter; }
         }
 
+        if (*scale < 1) { *scale = 1; }
+        return false;
+    }
+};
+
+class LightPlay {
+    Light *light;
+    Mirrors *mirrors;
+
+    Circle target;
+    Circle src1, src2, src3, src4;
+
+    double scale;
+
+    void reachedTargetCallback() {
+        light->newRay();
+        target.setColor(COLOR(153, 0, 0));
+        wait(2);
+    }
+
+    void reflect(const Vector2d *e1,const  Vector2d* e2) {
+        light->newRay();
+        double a = light->getDirection();
+        double o = lineAngle(e1->x, e1->y, e2->x, e2->y);
+        double b = 2 * o - a;
+        light->setDirection(b);
+        light->moveHead(2);
+    }
+
+    void reflect(const Vector2d *center) {
+        light->newRay();
+        double a = light->getDirection();
+        Vector2d lightHead = light->getHead();
+        double o1 = lineAngle(lightHead.x, lightHead.y, center->x, center->y);
+        double o = o1 > 0 ? o1 - 90 : o1 + 90;
+        double b = 2 * o - a;
+        light->setDirection(b);
+        light->moveHead(2);
     }
 
     void placeTarget() {
         Vector2d click;
         registerClick(&click);
-        tarc[0] = click.x;
-        tarc[1] = click.y;
-        target = Circle(tarc[0], tarc[1], 50);
+        target = Circle(click.x, click.y, 50);
         target.setColor(COLOR(0, 204, 0)).setFill();
+    }
+
+    Vector2d placeSource() {
+        Vector2d click;
+        registerClick(&click);
+        src1.reset(click.x, click.y, 75);
+        src1.setColor(COLOR(242, 17, 17)).imprint();
+        src2.reset(click.x, click.y, 50);
+        src2.setColor(COLOR(242, 187, 17)).imprint();
+        src3.reset(click.x, click.y, 25);
+        src3.setColor(COLOR(242, 137, 17)).imprint();
+        src4.reset(click.x, click.y, 2);
+        src4.setColor(COLOR(24, 137, 17)).imprint();
+        return click;
     }
 
 public:
 
-    LightPlay(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) :
-            noLineMirrors(noLineMirrors),
-            noCircleMirrors(noCircleMirrors),
-            noSquareMirrors(noSquareMirrors) {
-        placeLineMirrors();
-        placeCircleMirrors();
-        placeSquareMirrors();
+    LightPlay(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) : scale(1) {
+        mirrors = new Mirrors(noLineMirrors, noCircleMirrors, noSquareMirrors);
+        const Vector2d epoch = placeSource();
         placeTarget();
+        light = new Light(epoch);
 
         Vector2d click;
-
-        registerClick(&click);
-        Vector2d epoch = Vector2d(click.x, click.y);
-        light = new Light(&epoch);
-
-        // Source
-        Circle src1(epoch.x, epoch.y, 75);
-        src1.setColor(COLOR(242, 17, 17)).imprint();
-        Circle src2(epoch.x, epoch.y, 50);
-        src2.setColor(COLOR(242, 187, 17)).imprint();
-        Circle src3(epoch.x, epoch.y, 25);
-        src3.setColor(COLOR(242, 137, 17)).imprint();
-        Circle src4(epoch.x, epoch.y, 2);
-        src4.setColor(COLOR(24, 137, 17)).imprint();
-
-        int checker = 0;
-        scale = 1;
         while (true) {
             registerClick(&click);
             if (Vector2d(click.x - epoch.x, click.y - epoch.y).length() <= 75) { break; }
@@ -281,8 +272,7 @@ public:
         // single game
         while (true) {
             exit = false;
-            double o;
-            o = rayAngle(epoch.x, epoch.y, click.x, click.y);
+            double o = rayAngle(epoch.x, epoch.y, click.x, click.y);
             light->setDirection(o);
             Vector2d lightHead;
             // single walk
@@ -290,19 +280,19 @@ public:
 
                 // single ray
                 while (true) {
-                    //cout<<"i";
-
                     light->moveHead(scale);
-                    checker++;
                     lightHead = light->getHead();
-                    if (Vector2d(lightHead.x - tarc[0], lightHead.y - tarc[1]).length() <= 50) {
+                    if (Vector2d(lightHead.x - target.getX(), lightHead.y - target.getY()).length() <= 50) {
                         reachedTargetCallback();
                         exit = true;
                         cout << "PASSED" << endl;
                         break;
                     }
-                    if (isOnLineMirror()) { reflectOnLine(pass); }
-                    if (isOnCircleMirror()) { reflectOnCircle(pass); }
+                    Vector2d e1, e2;
+                    Vector2d center;
+                    if (mirrors->isOnLineMirror(&lightHead, &e1, &e2, &scale)) { reflect(&e1, &e2); }
+                    if (mirrors->isOnCircleMirror(&lightHead, &center, &scale)) { reflect(&center); }
+
                     lightHead = light->getHead();
                     if (lightHead.x >= 1450 || lightHead.x <= 50 || lightHead.y >= 650 || lightHead.y <= 50) { break; }
                 }
@@ -326,16 +316,13 @@ public:
                 if (Vector2d(click.x - epoch.x, click.y - epoch.y).length() <= 75) { break; }
             }
 
-            //resetting the system
-            //Line zero(0,0,0,0);
-            //for(size_t i=0;i<lightRays.size();i++){lightRays[i]=zero;}
             light->reset();
         }
-        //cout<<checker;
     }
 
     ~LightPlay() {
         delete light;
+        delete mirrors;
     }
 
 };

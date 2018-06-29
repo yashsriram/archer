@@ -3,8 +3,6 @@
     - [x] mirrors class
     - [ ] light play class
     - [ ] tidy code
-    - [ ] handle two mirror simultaneous reflection
-    - [ ] handle corner reflection cases
 - [ ] improve placement
     - [ ] text box
 - [ ] improve game

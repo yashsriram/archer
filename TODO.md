@@ -2,7 +2,7 @@
     - [x] light class
     - [x] mirrors class
     - [x] limits in number of mirrors
-    - [ ] light play class
+    - [x] light play class
     - [ ] tidy code
 - [ ] improve placement
     - [ ] text box

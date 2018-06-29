@@ -99,7 +99,7 @@ class Mirrors {
      * Square mirror is nothing but set of 4 Line mirrors
      * */
     void placeSquareMirrors(int noSquareMirrors) {
-        const double SIDE_LENGTH_OF_SQUARE = 50;
+        const double SIDE_LENGTH_OF_SQUARE = 80;
         double x1, y1;
         Vector2d click;
         for (int i = 0; i < noSquareMirrors; i++) {

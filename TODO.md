@@ -1,6 +1,7 @@
 - [ ] improve code
     - [x] light class
     - [x] mirrors class
+    - [x] limits in number of mirrors
     - [ ] light play class
     - [ ] tidy code
 - [ ] improve placement

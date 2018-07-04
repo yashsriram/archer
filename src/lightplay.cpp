@@ -1,8 +1,9 @@
 #include<simplecpp>
+#include <sstream>
 #include "utils.cpp"
 
 class Light {
-    constexpr static Color LIGHT_COLOR = COLOR(255, 255, 255);
+    Color LIGHT_COLOR = COLOR(255, 255, 255);
 
     vector<Line> rays;
     const Vector2d *epoch;
@@ -65,7 +66,8 @@ class Mirrors {
     constexpr static double SIDE_LENGTH_OF_SQUARE = 80;
     constexpr static double MIRROR_APPROACH_MARGIN = 0.5;
 
-    constexpr static Color MIRROR_COLOR = COLOR(160, 160, 160);
+    Color MIRROR_COLOR = COLOR(160, 160, 160);
+    Color INSTRUCTION_COLOR = COLOR(255, 255, 255);
 
     vector<Line> lineMirrors;
     vector<Circle> circleMirrors;
@@ -73,8 +75,12 @@ class Mirrors {
     void placeLineMirrors(int noLineMirrors) {
         double x1, y1, x2, y2;
         Vector2d click;
+        Text instruction;
+        instruction.setColor(INSTRUCTION_COLOR);
         for (int i = 0; i < noLineMirrors; i++) {
-
+            ostringstream oss;
+            oss << "Click at two points to place a line mirror, " << noLineMirrors - i << " left";
+            instruction.reset(200, 25, oss.str());
             registerClick(&click);
             x1 = click.x;
             y1 = click.y;
@@ -91,7 +97,12 @@ class Mirrors {
 
     void placeCircleMirrors(int noCircleMirrors) {
         Vector2d click;
+        Text instruction;
+        instruction.setColor(INSTRUCTION_COLOR);
         for (int i = 0; i < noCircleMirrors; i++) {
+            ostringstream oss;
+            oss << "Click at a point to place a circle mirror, " << noCircleMirrors - i << " left";
+            instruction.reset(200, 25, oss.str());
             registerClick(&click);
             Circle newCircleMirror = Circle(click.x, click.y, RADIUS_OF_CIRCLE);
             newCircleMirror.setColor(MIRROR_COLOR).setFill();
@@ -105,7 +116,13 @@ class Mirrors {
     void placeSquareMirrors(int noSquareMirrors) {
         double x1, y1;
         Vector2d click;
+        Text instruction;
+        instruction.setColor(INSTRUCTION_COLOR);
         for (int i = 0; i < noSquareMirrors; i++) {
+            ostringstream oss;
+            oss << "Click at a point to place a square mirror, " << noSquareMirrors - i << " left";
+            instruction.reset(200, 25, oss.str());
+
             registerClick(&click);
             x1 = click.x;
             y1 = click.y;
@@ -213,8 +230,9 @@ class LightPlay {
     constexpr static double WINDOW_HEIGHT = 700;
     constexpr static double WINDOW_PADDING = 50;
 
-    constexpr static Color TARGET_COLOR_ON_HIT = COLOR(153, 0, 0);
-    constexpr static Color TARGET_COLOR_NORMAL = COLOR(0, 204, 0);
+    Color TARGET_COLOR_ON_HIT = COLOR(153, 0, 0);
+    Color TARGET_COLOR_NORMAL = COLOR(0, 204, 0);
+    Color INSTRUCTION_COLOR = COLOR(255, 255, 255);
 
     Light *light;
     Mirrors *mirrors;
@@ -222,14 +240,16 @@ class LightPlay {
     Rectangle border1, border2;
     Circle target;
     Circle src1, src2, src3, src4;
+    Text instruction;
 
     double scale;
 
     void reachedTargetCallback() {
         light->newRay();
         target.setColor(TARGET_COLOR_ON_HIT);
+        instruction.reset(170, 25, "Congratulations! You popped the balloon!");
+        instruction.setColor(INSTRUCTION_COLOR);
         wait(2);
-        cout << "PASSED" << endl;
     }
 
     void reflectOnLine(const Vector2d *e1, const Vector2d *e2) {
@@ -253,6 +273,8 @@ class LightPlay {
     }
 
     void placeTarget() {
+        instruction.reset(90, 25, "Place the balloon");
+        instruction.setColor(INSTRUCTION_COLOR);
         Vector2d click;
         registerClick(&click);
         target = Circle(click.x, click.y, RADIUS_OF_TARGET);
@@ -260,6 +282,8 @@ class LightPlay {
     }
 
     Vector2d placeSource() {
+        instruction.reset(90, 25, "Place the laser source");
+        instruction.setColor(INSTRUCTION_COLOR);
         Vector2d click;
         registerClick(&click);
         src1.reset(click.x, click.y, RADIUS_OF_SOURCE);
@@ -300,6 +324,9 @@ public:
         const Vector2d epoch = placeSource();
         light = new Light(epoch);
         placeTarget();
+
+        instruction.reset(90, 25, "Pop the balloon");
+        instruction.setColor(INSTRUCTION_COLOR);
 
         // single game
         while (true) {

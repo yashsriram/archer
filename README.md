@@ -6,8 +6,10 @@
 * Install dependencies
     * `sudo apt-get install libx11-6 libx11-dev`
 * Open terminal in this directory
+    * `mkdir build && cd build`
+    * `cmake ..`
     * `make` to compile code [creates an executable **lightplay**]
-    * `make play` or `./lightplay` to start playing
+    * `./lightplay` to start playing
 
 ## How to play?
 * There is a fixed laser source which emits a straight beam

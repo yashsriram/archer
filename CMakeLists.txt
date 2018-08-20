@@ -6,6 +6,7 @@ project(Lightplay)
 
 # Flags
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "-Wall")
 
 # Sources and Headers
 set(SOURCES src/main.cpp)

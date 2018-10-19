@@ -1,3 +1,4 @@
+![Alt Gameplay](github/gameplay.gif)
 ## Light Play
 * Light Play is a 2d simulator/game of light
 * It simulates reflection in presence of different types of mirrors

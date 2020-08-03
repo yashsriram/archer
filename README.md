@@ -1,7 +1,7 @@
 # archer
 
 ## description
-- Archer is a simple game based on light reflection.
+- Archer is a simple aim and shoot game based on light reflection.
 - It simulates reflection of light (on different types of mirrors) using ray marching technique.
 
 ## code
@@ -48,5 +48,7 @@ The following GIF illustrates the usage.
     - [x] Game class.
     - [x] Tidy code.
 - [ ] Improve game.
-    - [ ] Improve text box placement.
+    - [x] Better prompts.
+    - [x] Improve text box placement.
+    - [x] Better colors.
     - [ ] Predefined mirror placements as levels stored in files.

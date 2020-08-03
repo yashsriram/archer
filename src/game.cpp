@@ -3,7 +3,7 @@
 #include "utils.cpp"
 
 class Light {
-    Color LIGHT_COLOR = COLOR(255, 255, 255);
+    Color LIGHT_COLOR = COLOR(255, 0, 0);
 
     vector<Line> rays;
     const Vector2d *epoch;
@@ -80,7 +80,7 @@ class Mirrors {
         for (int i = 0; i < noLineMirrors; i++) {
             ostringstream oss;
             oss << "Click at two points to place a line mirror, " << noLineMirrors - i << " left";
-            instruction.reset(200, 25, oss.str());
+            instruction.reset(750, 25, oss.str());
             registerClick(&click);
             x1 = click.x;
             y1 = click.y;
@@ -102,7 +102,7 @@ class Mirrors {
         for (int i = 0; i < noCircleMirrors; i++) {
             ostringstream oss;
             oss << "Click at a point to place a circle mirror, " << noCircleMirrors - i << " left";
-            instruction.reset(200, 25, oss.str());
+            instruction.reset(750, 25, oss.str());
             registerClick(&click);
             Circle newCircleMirror = Circle(click.x, click.y, RADIUS_OF_CIRCLE);
             newCircleMirror.setColor(MIRROR_COLOR).setFill();
@@ -121,7 +121,7 @@ class Mirrors {
         for (int i = 0; i < noSquareMirrors; i++) {
             ostringstream oss;
             oss << "Click at a point to place a square mirror, " << noSquareMirrors - i << " left";
-            instruction.reset(200, 25, oss.str());
+            instruction.reset(750, 25, oss.str());
 
             registerClick(&click);
             x1 = click.x;
@@ -239,7 +239,7 @@ class Game {
 
     Rectangle border1, border2;
     Circle target;
-    Circle src1, src2, src3, src4;
+    Circle src1, src2;
     Text instruction;
 
     double scale;
@@ -247,7 +247,7 @@ class Game {
     void reachedTargetCallback() {
         light->newRay();
         target.setColor(TARGET_COLOR_ON_HIT);
-        instruction.reset(170, 25, "Congratulations! You popped the balloon!");
+        instruction.reset(750, 25, "Congratulations! You popped the balloon!");
         instruction.setColor(INSTRUCTION_COLOR);
         wait(2);
     }
@@ -273,7 +273,7 @@ class Game {
     }
 
     void placeTarget() {
-        instruction.reset(90, 25, "Place the balloon");
+        instruction.reset(750, 25, "Place the balloon");
         instruction.setColor(INSTRUCTION_COLOR);
         Vector2d click;
         registerClick(&click);
@@ -282,18 +282,14 @@ class Game {
     }
 
     Vector2d placeSource() {
-        instruction.reset(90, 25, "Place the laser source");
+        instruction.reset(750, 25, "Place the laser source");
         instruction.setColor(INSTRUCTION_COLOR);
         Vector2d click;
         registerClick(&click);
         src1.reset(click.x, click.y, RADIUS_OF_SOURCE);
-        src1.setColor(COLOR(242, 17, 17)).imprint();
-        src2.reset(click.x, click.y, RADIUS_OF_SOURCE * 0.75);
-        src2.setColor(COLOR(242, 187, 17)).imprint();
-        src3.reset(click.x, click.y, RADIUS_OF_SOURCE * 0.25);
-        src3.setColor(COLOR(242, 137, 17)).imprint();
-        src4.reset(click.x, click.y, RADIUS_OF_SOURCE * 0.05);
-        src4.setColor(COLOR(24, 137, 17)).imprint();
+        src1.setColor(COLOR(242, 187, 17)).imprint();
+        src2.reset(click.x, click.y, RADIUS_OF_SOURCE * 0.05);
+        src2.setColor(COLOR(242, 0, 0)).imprint();
         return click;
     }
 
@@ -325,7 +321,7 @@ public:
         light = new Light(epoch);
         placeTarget();
 
-        instruction.reset(90, 25, "Pop the balloon");
+        instruction.reset(750, 25, "Pop the balloon");
         instruction.setColor(INSTRUCTION_COLOR);
 
         // single game

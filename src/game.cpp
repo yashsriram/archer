@@ -105,7 +105,7 @@ class Mirrors {
             instruction.reset(750, 25, oss.str());
             registerClick(&click);
             Circle newCircleMirror = Circle(click.x, click.y, RADIUS_OF_CIRCLE);
-            newCircleMirror.setColor(MIRROR_COLOR).setFill();
+            newCircleMirror.setColor(MIRROR_COLOR);
             circleMirrors.push_back(newCircleMirror);
         }
     }

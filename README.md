@@ -35,9 +35,31 @@
 - The goal is to hit and pop the balloon with the light.
 
 ## demonstration
-The following GIF illustrates the usage.
+The following gifs illustrates the gameplay.
 
-![](./github/gameplay.gif)
+- (#line, #circle, #square) == (0, 0, 0)
+
+![](./github/1.000.gif)
+
+- (#line, #circle, #square) == (2, 0, 0)
+
+![](./github/2.200.gif)
+
+- (#line, #circle, #square) == (4, 0, 0)
+
+![](./github/3.400.gif)
+
+- (#line, #circle, #square) == (3, 1, 1)
+
+![](./github/4.311.gif)
+
+- (#line, #circle, #square) == (6, 0, 0)
+
+![](./github/5.060.gif)
+
+- (#line, #circle, #square) == (5, 1, 0)
+
+![](./github/6.510.gif)
 
 ## roadmap
 - [x] Basic ray marching.

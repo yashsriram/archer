@@ -1,4 +1,4 @@
-#include "lightplay.cpp"
+#include "game.cpp"
 
 // full game with little optimization + spherical mirrors + cubical mirrors
 int main() {
@@ -23,8 +23,7 @@ int main() {
         cin >> noSquareMirrors;
     }
 
-    initCanvas("LightPlay", 1500, 700);
+    initCanvas("Archer", 1500, 700);
 
-//define a light class rotate ,reflect until last non reflecting surface.
-    LightPlay lightPlay = LightPlay(noLineMirrors, noCircleMirrors, noSquareMirrors);
+    Game(noLineMirrors, noCircleMirrors, noSquareMirrors);
 }

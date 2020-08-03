@@ -1,12 +1,12 @@
-# light-play
+# archer
 
 ## description
-- Light play is a simple 2D ray marcher.
-- It simulates reflection of light in presence of (different types of mirrors) using ray marching technique.
+- Archer is a simple game based on light reflection.
+- It simulates reflection of light (on different types of mirrors) using ray marching technique.
 
 ## code
 - The code is written in `C++`.
-- All the src is written in `src/`.
+- All the source code is in `src/`.
 - [Simplecpp](https://www.cse.iitb.ac.in/~ranade/simplecpp/) is used for rendering.
 - `include` & `lib` contains headers and implementation of simplecpp.
 
@@ -20,17 +20,19 @@
 - Open terminal in the root directory.
     - Make a build directory using `mkdir build && cd build`.
     - Create a makefile using `cmake ..`
-    - Compile code using `make`. This creates an executable named `lightplay`.
-    - Use `./lightplay` to start playing.
+    - Compile code using `make`. This creates an executable named `archer`.
+    - Use `./archer` to start playing.
 
-### workflow
-- There are three types of mirror (line, circle, square). Specify the number of each type when prompted.
-- You can place the mirrors one by one in that order.
-- Then you can place a fixed light source which emits a straight beam of light.
-- Then you can place a balloon.
-- You can control the light's direction by clicking inside concentric circles.
-- The light reflects off of mirrors following the law of reflection.
-- When the light hits the green balloon the simulation ends.
+### rules
+- There are three types of mirror (line, circle, square).
+- Specify the number of each type when prompted.
+- Then
+    1. Place the mirrors one by one in that order.
+    1. Place a fixed laser source which emits a single ray of high energy light.
+    1. Place a balloon.
+- You can control the ray's direction by clicking inside concentric circles.
+- The ray reflects off the mirrors following [the laws of reflection](https://en.wikipedia.org/wiki/Reflection_(physics)#Laws_of_reflection)
+- The goal is to hit and pop the balloon with the light.
 
 ## demonstration
 The following GIF illustrates the usage.
@@ -43,7 +45,7 @@ The following GIF illustrates the usage.
     - [x] Light class.
     - [x] Mirrors class.
     - [x] Limits in number of mirrors.
-    - [x] Light play class.
+    - [x] Game class.
     - [x] Tidy code.
 - [ ] Improve game.
     - [ ] Improve text box placement.

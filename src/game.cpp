@@ -223,7 +223,7 @@ public:
     }
 };
 
-class LightPlay {
+class Game {
     constexpr static double RADIUS_OF_TARGET = 50;
     constexpr static double RADIUS_OF_SOURCE = 75;
     constexpr static double WINDOW_WIDTH = 1500;
@@ -317,7 +317,7 @@ class LightPlay {
 
 public:
 
-    LightPlay(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) {
+    Game(int noLineMirrors, int noCircleMirrors, int noSquareMirrors) {
         scale = 1;
         drawWalls();
         mirrors = new Mirrors(noLineMirrors, noCircleMirrors, noSquareMirrors);
@@ -373,7 +373,7 @@ public:
         }
     }
 
-    ~LightPlay() {
+    ~Game() {
         delete light;
         delete mirrors;
     }

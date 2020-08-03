@@ -37,27 +37,27 @@
 ## demonstration
 The following gifs illustrates the gameplay.
 
-- (#line, #circle, #square) == (0, 0, 0)
+- Simplest case `(#line,#circle,#square) = (0,0,0)`.
 
 ![](./github/1.000.gif)
 
-- (#line, #circle, #square) == (2, 0, 0)
+- Single reflection `(#line,#circle,#square) = (2,0,0)`.
 
 ![](./github/2.200.gif)
 
-- (#line, #circle, #square) == (4, 0, 0)
+- Multiple reflections `(#line,#circle,#square) = (4,0,0)`.
 
 ![](./github/3.400.gif)
 
-- (#line, #circle, #square) == (3, 1, 1)
+- Difficult `(#line,#circle,#square) = (3,1,1)`.
 
 ![](./github/4.311.gif)
 
-- (#line, #circle, #square) == (6, 0, 0)
+- Very difficult `(#line,#circle,#square) = (6,0,0)`.
 
 ![](./github/5.060.gif)
 
-- (#line, #circle, #square) == (5, 1, 0)
+- Almost impossible `(#line,#circle,#square) = (5,1,1)`.
 
 ![](./github/6.510.gif)
 

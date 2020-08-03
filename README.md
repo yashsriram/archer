@@ -74,3 +74,4 @@ The following gifs illustrates the gameplay.
     - [x] Improve text box placement.
     - [x] Better colors.
     - [ ] Predefined mirror placements as levels stored in files.
+    - [ ] Implement refraction.

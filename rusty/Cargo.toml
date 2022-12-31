@@ -1,0 +1,8 @@
+[package]
+name = "archer"
+version = "0.0.0"
+authors = ["Yashasvi Sriram Patkuri <yash.3997@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+bevy = "0.8.1"

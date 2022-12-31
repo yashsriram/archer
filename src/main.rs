@@ -13,9 +13,8 @@ const ROOM_WIDTH: f32 = 700.;
 const ROOM_HEIGHT: f32 = 500.;
 const ROOM_PADDING: f32 = 10.;
 const LIGHT_COLOR: Color = Color::RED;
-const CLICK_RADIUS: f32 = 62.;
 const MIRROR_APPROACH_MARGIN: f32 = 0.5;
-const MIRROR_COLOR: Color = Color::rgb(0.62, 0.62, 0.62);
+const MIRROR_COLOR: Color = Color::WHITE;
 
 fn main() {
     let mut app = App::new();
@@ -95,27 +94,29 @@ fn init(
         .insert(LightMarker);
     // Click circle
     commands.spawn_bundle(MaterialMesh2dBundle {
-        mesh: meshes
-            .add(Mesh::from(circle_mesh(Vec2::ZERO, CLICK_RADIUS)))
-            .into(),
+        mesh: meshes.add(Mesh::from(circle_mesh(Vec2::ZERO, 4.))).into(),
         material: materials.add(Color::YELLOW.into()),
         transform: Transform::from_xyz(light.epoch.x, light.epoch.y, 0.),
         ..default()
     });
     // Target
-    commands.spawn_bundle(MaterialMesh2dBundle {
-        mesh: meshes
-            .add(Mesh::from(circle_mesh(Vec2::ZERO, target.radius)))
-            .into(),
-        material: materials.add(Color::GREEN.into()),
-        transform: Transform::from_xyz(target.center.x, target.center.y, 0.),
-        ..default()
-    });
+    commands
+        .spawn_bundle(MaterialMesh2dBundle {
+            mesh: meshes
+                .add(Mesh::from(circle_mesh(Vec2::ZERO, target.radius)))
+                .into(),
+            material: materials.add(Color::GREEN.into()),
+            transform: Transform::from_xyz(target.center.x, target.center.y, 0.),
+            ..default()
+        })
+        .insert(TargetMarker);
 }
 
 fn game(
     light_mesh_handle: Query<(&LightMarker, &Mesh2dHandle)>,
+    target_material_handle: Query<(&TargetMarker, &Handle<ColorMaterial>)>,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
     mouse_button_input: Res<Input<MouseButton>>,
     mut windows: ResMut<Windows>,
     mut light: ResMut<Light>,
@@ -135,35 +136,40 @@ fn game(
             let click = Vec2::new(x_hat / scale_factor, y_hat / scale_factor);
             info!("click = {:?}", click);
             let aim = click - light.epoch;
-            if aim.length() > 0. && aim.length() > CLICK_RADIUS {
+            if aim.length() == 0. {
                 return;
             }
             light.reset();
             let (_, light_mesh_handle) = light_mesh_handle.single();
+            let (_, target_material_handle) = target_material_handle.single();
             let light_mesh = meshes.get_mut(&light_mesh_handle.0).unwrap();
             *light_mesh = Mesh::from(&*light);
             light.set_direction(aim);
+            let target_material = materials.get_mut(&target_material_handle).unwrap();
+            target_material.color = Color::GREEN;
             let mut scale = 1.;
             loop {
                 light.move_head(scale);
                 let hitting_target = (light.head - target.center).length() <= target.radius;
                 if hitting_target {
                     info!("* target hit");
-                    add_point_to_mesh(light_mesh, light.head);
+                    light.add_point_to_mesh(light_mesh);
+                    let target_material = materials.get_mut(&target_material_handle).unwrap();
+                    target_material.color = Color::RED;
                     return;
                 }
                 let hitting_wall =
-                    light.head.x.abs() > ROOM_WIDTH / 2. || light.head.y.abs() > ROOM_HEIGHT / 2.;
+                    light.head.x.abs() > ROOM_WIDTH / 1. || light.head.y.abs() > ROOM_HEIGHT / 2.;
                 if hitting_wall {
                     info!("* wall hit");
-                    add_point_to_mesh(light_mesh, light.head);
+                    light.add_point_to_mesh(light_mesh);
                     return;
                 }
-                if let Some(mirror) = mirrors.try_reflect(light.head, &mut scale) {
+                if let Some(mirror) = mirrors.check_reflection(light.head, &mut scale) {
                     match mirror {
                         Mirror::Line { e1, e2 } => {
                             info!("* line mirror hit");
-                            add_point_to_mesh(light_mesh, light.head);
+                            light.add_point_to_mesh(light_mesh);
                             let ray = light.direction.normalize();
                             let mirror = if ray.dot(e2 - e1) > 0. {
                                 (e2 - e1).normalize()
@@ -184,7 +190,7 @@ fn game(
                         }
                         Mirror::Circle { center, .. } => {
                             info!("* circle mirror hit");
-                            add_point_to_mesh(light_mesh, light.head);
+                            light.add_point_to_mesh(light_mesh);
                             let ray = light.direction.normalize();
                             let mirror_perp_cap = (light.head - center).normalize();
                             let mirror_cap =

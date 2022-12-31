@@ -69,7 +69,7 @@ impl Default for Mirrors {
 }
 
 impl Mirrors {
-    pub fn try_reflect(&self, point: Vec2, scale: &mut f32) -> Option<Mirror> {
+    pub fn check_reflection(&self, point: Vec2, scale: &mut f32) -> Option<Mirror> {
         for mirror in self.mirrors.iter() {
             match mirror {
                 Mirror::Line { e1, e2 } => {

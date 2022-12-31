@@ -31,6 +31,28 @@ impl Light {
         self.head = self.epoch;
         self.direction = Vec2::X;
     }
+
+    pub fn add_point_to_mesh(&self, mesh: &mut Mesh) {
+        let count = mesh.count_vertices();
+        if let Some(VertexAttributeValues::Float32x3(positions)) =
+            mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION)
+        {
+            positions.push([self.head.x, self.head.y, 0.]);
+        }
+        if let Some(VertexAttributeValues::Float32x3(normals)) =
+            mesh.attribute_mut(Mesh::ATTRIBUTE_NORMAL)
+        {
+            normals.push([0., 0., 1.]);
+        }
+        if let Some(VertexAttributeValues::Float32x2(uvs)) =
+            mesh.attribute_mut(Mesh::ATTRIBUTE_UV_0)
+        {
+            uvs.push([0., 0.]);
+        }
+        if let Some(Indices::U32(indices)) = mesh.indices_mut() {
+            indices.push(count as u32);
+        }
+    }
 }
 
 impl From<&Light> for Mesh {
@@ -46,25 +68,5 @@ impl From<&Light> for Mesh {
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
         mesh
-    }
-}
-
-pub fn add_point_to_mesh(mesh: &mut Mesh, point: Vec2) {
-    let count = mesh.count_vertices();
-    if let Some(VertexAttributeValues::Float32x3(positions)) =
-        mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION)
-    {
-        positions.push([point.x, point.y, 0.]);
-    }
-    if let Some(VertexAttributeValues::Float32x3(normals)) =
-        mesh.attribute_mut(Mesh::ATTRIBUTE_NORMAL)
-    {
-        normals.push([0., 0., 1.]);
-    }
-    if let Some(VertexAttributeValues::Float32x2(uvs)) = mesh.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
-        uvs.push([0., 0.]);
-    }
-    if let Some(Indices::U32(indices)) = mesh.indices_mut() {
-        indices.push(count as u32);
     }
 }

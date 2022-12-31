@@ -13,6 +13,7 @@ use target::*;
 const LIGHT_COLOR: Color = Color::RED;
 const MIRROR_APPROACH_MARGIN: f32 = 0.5;
 const MIRROR_COLOR: Color = Color::WHITE;
+const REFLECTION_COUNT_THRESHOLD: usize = 5_000;
 
 fn main() {
     let mut app = App::new();
@@ -125,6 +126,7 @@ fn game(
             let target_material = materials.get_mut(&target_material_handle).unwrap();
             target_material.color = Color::GREEN;
             let mut scale = 1.;
+            let mut reflection_count = 0;
             loop {
                 light.move_head(scale);
                 let hitting_target = (light.head - target.center).length() <= target.radius;
@@ -184,6 +186,10 @@ fn game(
                             light.move_head(2.);
                         }
                     }
+                    reflection_count += 1;
+                }
+                if reflection_count > REFLECTION_COUNT_THRESHOLD {
+                    return;
                 }
             }
         }

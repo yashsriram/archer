@@ -9,9 +9,6 @@ use mirrors::*;
 mod target;
 use target::*;
 
-const ROOM_WIDTH: f32 = 700.;
-const ROOM_HEIGHT: f32 = 500.;
-const ROOM_PADDING: f32 = 10.;
 const LIGHT_COLOR: Color = Color::RED;
 const MIRROR_APPROACH_MARGIN: f32 = 0.5;
 const MIRROR_COLOR: Color = Color::WHITE;
@@ -26,8 +23,8 @@ fn main() {
         });
     }
     app.insert_resource(WindowDescriptor {
-        width: ROOM_WIDTH + 2. * ROOM_PADDING,
-        height: ROOM_HEIGHT + 2. * ROOM_PADDING,
+        width: 700.,
+        height: 500.,
         canvas: Some("#interactive".to_string()),
         fit_canvas_to_parent: true,
         ..default()
@@ -55,27 +52,6 @@ fn init(
 ) {
     // Camera
     commands.spawn_bundle(Camera2dBundle::default());
-    // Room
-    commands.spawn_bundle(MaterialMesh2dBundle {
-        mesh: meshes
-            .add(Mesh::from(shape::Quad::new(Vec2::new(
-                ROOM_WIDTH + 2. * ROOM_PADDING,
-                ROOM_HEIGHT + 2. * ROOM_PADDING,
-            ))))
-            .into(),
-        material: materials.add(Color::WHITE.into()),
-        ..default()
-    });
-    commands.spawn_bundle(MaterialMesh2dBundle {
-        mesh: meshes
-            .add(Mesh::from(shape::Quad::new(Vec2::new(
-                ROOM_WIDTH,
-                ROOM_HEIGHT,
-            ))))
-            .into(),
-        material: materials.add(Color::BLACK.into()),
-        ..default()
-    });
     // Mirrors
     for mirror in mirrors.mirrors.iter() {
         commands.spawn_bundle(MaterialMesh2dBundle {
@@ -126,19 +102,19 @@ fn game(
     if mouse_button_input.just_pressed(MouseButton::Left) {
         let window = windows.primary_mut();
         if let Some(cursor) = window.physical_cursor_position() {
-            let w = window.physical_width();
-            let h = window.physical_height();
-            let (x_hat, y_hat) = (
-                cursor.x as f32 - w as f32 / 2.,
-                cursor.y as f32 - h as f32 / 2.,
+            let cursor = Vec2::new(cursor.x as f32, cursor.y as f32);
+            let semi_viewport_axes = Vec2::new(
+                window.physical_width() as f32 / 2.,
+                window.physical_height() as f32 / 2.,
             );
+            let unscaled_click = cursor - semi_viewport_axes;
             let scale_factor = window.scale_factor() as f32;
-            let click = Vec2::new(x_hat / scale_factor, y_hat / scale_factor);
-            info!("click = {:?}", click);
+            let click = unscaled_click / scale_factor;
             let aim = click - light.epoch;
             if aim.length() == 0. {
                 return;
             }
+            info!("aim = {:?}", aim);
             light.reset();
             let (_, light_mesh_handle) = light_mesh_handle.single();
             let (_, target_material_handle) = target_material_handle.single();
@@ -158,10 +134,10 @@ fn game(
                     target_material.color = Color::RED;
                     return;
                 }
-                let hitting_wall =
-                    light.head.x.abs() > ROOM_WIDTH / 1. || light.head.y.abs() > ROOM_HEIGHT / 2.;
-                if hitting_wall {
-                    info!("* wall hit");
+                let is_outside_viewport = light.head.x.abs() > semi_viewport_axes.x / scale_factor
+                    || light.head.y.abs() > semi_viewport_axes.y / scale_factor;
+                if is_outside_viewport {
+                    info!("* viewport hit");
                     light.add_point_to_mesh(light_mesh);
                     return;
                 }

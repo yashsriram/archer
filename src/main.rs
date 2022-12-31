@@ -1,3 +1,4 @@
+#[cfg(not(target_arch = "wasm32"))]
 use bevy::asset::AssetServerSettings;
 use bevy::sprite::Mesh2dHandle;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};

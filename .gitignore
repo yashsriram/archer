@@ -1,5 +1,2 @@
-cmake-build-debug
-*~
-.idea
-lightplay
-build
+target/
+static/wasm-bindgen

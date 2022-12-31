@@ -29,7 +29,7 @@ fn main() {
     app.insert_resource(WindowDescriptor {
         width: ROOM_WIDTH + 2. * ROOM_PADDING,
         height: ROOM_HEIGHT + 2. * ROOM_PADDING,
-        canvas: Some("#interactive_example".to_string()),
+        canvas: Some("#interactive".to_string()),
         fit_canvas_to_parent: true,
         ..default()
     })

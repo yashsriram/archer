@@ -39,27 +39,27 @@ The following gifs illustrates the gameplay.
 
 - Simplest case `(#line,#circle,#square) = (0,0,0)`.
 
-![](../github/1.000.gif)
+![](./github/1.000.gif)
 
 - Single reflection `(#line,#circle,#square) = (2,0,0)`.
 
-![](../github/2.200.gif)
+![](./github/2.200.gif)
 
 - Multiple reflections `(#line,#circle,#square) = (4,0,0)`.
 
-![](../github/3.400.gif)
+![](./github/3.400.gif)
 
 - Difficult `(#line,#circle,#square) = (3,1,1)`.
 
-![](../github/4.311.gif)
+![](./github/4.311.gif)
 
 - Very difficult `(#line,#circle,#square) = (6,0,0)`.
 
-![](../github/5.060.gif)
+![](./github/5.060.gif)
 
 - Almost impossible `(#line,#circle,#square) = (5,1,1)`.
 
-![](../github/6.510.gif)
+![](./github/6.510.gif)
 
 ## roadmap
 - [x] Basic ray marching.
